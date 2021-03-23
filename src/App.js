@@ -75,9 +75,13 @@ function App() {
                       + "&scope=" + inputs.scope
                       + "&hostname=" + window.location.href;
 
+  const repoLink = "https://github.com/alecchendev/spotify-refresh-token";
+
   return (
     <div id='container'>
-      <h1>www.getyourspotifyrefreshtoken.com</h1>
+      <h1>{window.location.hostname}</h1>
+      <p>If this app helps you at all, feel free to star my repository so I can claim developer fame.</p>
+      <p>Repo: <a href={repoLink}>{repoLink}</a></p>
       <div>
         <label>Client Id</label>
         <input
@@ -103,7 +107,7 @@ function App() {
           onChange={handleChange}
         />
         <br/>
-        <a href={queryString}><button >Submit</button></a>
+        <a style={{color: 'black'}} href={queryString}><button >Submit</button></a>
       </div>
 
       {outputs.filled && 
