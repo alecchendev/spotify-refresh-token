@@ -82,6 +82,7 @@ function App() {
       <h1>{window.location.hostname}</h1>
       <p>If this app helps you at all, feel free to star my repository so I can claim developer fame.</p>
       <p>Repo: <a href={repoLink}>{repoLink}</a></p>
+      <p><strong>Remember to add {window.location.href + 'callback'} as a redirect uri in your app.</strong></p>
       <div>
         <label>Client Id</label>
         <input
@@ -106,6 +107,7 @@ function App() {
           value={inputs.scope}
           onChange={handleChange}
         />
+        <p>For multiple scopes, separate with spaces, e.g. user-top-read user-read-recently-played</p>
         <br/>
         <a style={{color: 'black'}} href={queryString}><button >Submit</button></a>
       </div>
