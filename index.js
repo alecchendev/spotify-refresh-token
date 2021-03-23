@@ -36,17 +36,23 @@ var stateKey = 'spotify_auth_state';
 
 var app = express();
 
-app.use(express.static(__dirname + '/public'))
-   .use(cors())
-   .use(cookieParser());
+app.use(express.static(__dirname + '/build'));
+app.use(cors());
+app.use(cookieParser());
 
 app.get('/login', function(req, res) {
 
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
 
+  const { clientId, clientSecret, scope } = req.query;
+  client_id = clientId;
+  client_secret = clientSecret;
+  console.log(client_id + " " + client_secret + " " + scope);
+
   // your application requests authorization
-  var scope = 'user-top-read user-read-recently-played';
+  // var scope = 'user-top-read user-read-recently-played';
+  // res.redirect('http:localhost:8888/poop');
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',

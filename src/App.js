@@ -1,11 +1,13 @@
 import React from 'react';
+import axios from 'axios';
+import { useParams } from "react-router";
 
 function App() {
 
   const [ inputs, setInputs ] = React.useState({
     clientId: '',
     clientSecret: '',
-    scopes: '',
+    scope: '',
   });
 
   const [ outputs, setOutputs ] = React.useState({
@@ -16,6 +18,9 @@ function App() {
     data: {}
   });
 
+  // const [ params, setParams ] = React.useState({});
+  const params = useParams();
+
   const handleChange = (event) => {
     console.log(event.target.name + ": " + event.target.value);
     setInputs({
@@ -24,19 +29,27 @@ function App() {
     });
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setOutputs({
       ...outputs,
       loading: true
     })
-    
     console.log('Confirmed submit.');
+    const response = await axios({
+      method: 'get',
+      url: '/login',
+      params: {
+        ...inputs
+      }
+    });
     setOutputs({
       ...outputs,
       loading: false,
       filled: !outputs.filled
     });
   }
+
+  const queryString = "/login?clientId=" + inputs.clientId + "&clientSecret=" + inputs.clientSecret + "&scope=" + inputs.scope;
 
   return (
     <div id='container'>
@@ -58,16 +71,19 @@ function App() {
           onChange={handleChange}
         />
         <br/>
-        <label>Scopes</label>
+        <label>Scope</label>
         <input
           type="text"
-          name="scopes"
-          value={inputs.scopes}
+          name="scope"
+          value={inputs.scope}
           onChange={handleChange}
         />
         <br/>
+        <a href={queryString}><button >Log In</button></a>
         <button type="submit" onClick={handleSubmit}>Submit</button>
       </div>
+
+      <h4>{JSON.stringify(params)}</h4>
 
       {outputs.loading &&
       <h2>Loading...</h2>}
