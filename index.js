@@ -15,7 +15,7 @@ var cookieParser = require('cookie-parser');
 
 var client_id = ''; // Your client id
 var client_secret = ''; // Your secret
-var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
+var redirect_uri = ''; //'http://localhost:8888/callback'; // Your redirect uri
 
 /**
  * Generates a random string containing numbers and letters
@@ -45,9 +45,10 @@ app.get('/login', function(req, res) {
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
 
-  const { clientId, clientSecret, scope } = req.query;
+  const { clientId, clientSecret, scope, hostname} = req.query;
   client_id = clientId;
   client_secret = clientSecret;
+  redirect_uri = hostname + 'callback';
   console.log(client_id + " " + client_secret + " " + scope);
 
   // your application requests authorization

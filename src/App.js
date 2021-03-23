@@ -1,6 +1,5 @@
 import React from 'react';
 import axios from 'axios';
-import { useParams } from "react-router";
 
 function App() {
 
@@ -11,15 +10,57 @@ function App() {
   });
 
   const [ outputs, setOutputs ] = React.useState({
-    loading: false,
     filled: false,
     accessToken: '',
     refreshToken: 'asdfasd',
     data: {}
   });
 
-  // const [ params, setParams ] = React.useState({});
-  const params = useParams();
+  function getHashParams() {
+    var hashParams = {};
+    var e, r = /([^&;=]+)=?([^&;]*)/g,
+        q = window.location.hash.substring(1);
+    while ( e = r.exec(q)) {
+       hashParams[e[1]] = decodeURIComponent(e[2]);
+    }
+    return hashParams;
+  }
+
+  React.useEffect(async () => {
+    
+    const params = getHashParams();
+
+    let data = {};
+
+    if (params.access_token && params.refresh_token) {
+
+      try {
+
+        const response = await axios({
+          method: 'get',
+          url: 'https://api.spotify.com/v1/me',
+          headers: { 
+            'Authorization': 'Bearer ' + params.access_token,
+          },
+          json: true
+        });
+        console.log(response);
+        data = response.data;
+
+      } catch (err) {
+        console.log(err);
+      }
+
+      setOutputs({
+        ...outputs,
+        filled: true,
+        accessToken: params.access_token,
+        refreshToken: params.refresh_token,
+        data 
+      });
+
+    }
+  }, []);
 
   const handleChange = (event) => {
     console.log(event.target.name + ": " + event.target.value);
@@ -29,27 +70,10 @@ function App() {
     });
   }
 
-  const handleSubmit = async () => {
-    setOutputs({
-      ...outputs,
-      loading: true
-    })
-    console.log('Confirmed submit.');
-    const response = await axios({
-      method: 'get',
-      url: '/login',
-      params: {
-        ...inputs
-      }
-    });
-    setOutputs({
-      ...outputs,
-      loading: false,
-      filled: !outputs.filled
-    });
-  }
-
-  const queryString = "/login?clientId=" + inputs.clientId + "&clientSecret=" + inputs.clientSecret + "&scope=" + inputs.scope;
+  const queryString = "http://localhost:8888/login?clientId=" + inputs.clientId
+                      + "&clientSecret=" + inputs.clientSecret
+                      + "&scope=" + inputs.scope
+                      + "&hostname=" + window.location.href;
 
   return (
     <div id='container'>
@@ -79,14 +103,8 @@ function App() {
           onChange={handleChange}
         />
         <br/>
-        <a href={queryString}><button >Log In</button></a>
-        <button type="submit" onClick={handleSubmit}>Submit</button>
+        <a href={queryString}><button >Submit</button></a>
       </div>
-
-      <h4>{JSON.stringify(params)}</h4>
-
-      {outputs.loading &&
-      <h2>Loading...</h2>}
 
       {outputs.filled && 
       <div>

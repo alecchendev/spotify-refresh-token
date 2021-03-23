@@ -24,8 +24,14 @@ label {
   margin-top: 20px;
 }
 
+a {
+  color: black;
+}
+
 p {
+  width: 100%;
   display: inline-block;
+  word-wrap: break-word;
 }
 
 button {
