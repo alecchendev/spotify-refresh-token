@@ -70,7 +70,7 @@ function App() {
     });
   }
 
-  const queryString = "http://localhost:8888/login?clientId=" + inputs.clientId
+  const queryString = window.location.href + "login?clientId=" + inputs.clientId
                       + "&clientSecret=" + inputs.clientSecret
                       + "&scope=" + inputs.scope
                       + "&hostname=" + window.location.href;
