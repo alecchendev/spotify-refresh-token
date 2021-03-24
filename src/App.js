@@ -70,10 +70,11 @@ function App() {
     });
   }
 
-  const queryString = window.location.href + "login?clientId=" + inputs.clientId
+  const queryString = window.location.href.split('/').slice(0, 3).join('/')
+                      + "/login?clientId=" + inputs.clientId
                       + "&clientSecret=" + inputs.clientSecret
                       + "&scope=" + inputs.scope
-                      + "&hostname=" + window.location.href;
+                      + "&hostname=" + window.location.href.split('/').slice(0, 3).join('/');
 
   const repoLink = "https://github.com/alecchendev/spotify-refresh-token";
 
@@ -81,8 +82,8 @@ function App() {
     <div id='container'>
       <h1>{window.location.hostname}</h1>
       <p>If this app helps you at all, feel free to star my repository so I can claim developer fame.</p>
-      <p>Repo: <a href={repoLink}>{repoLink}</a></p>
-      <p><strong>Remember to add {window.location.href + 'callback'} as a redirect uri in your app.</strong></p>
+      <p>Repo: <a href={repoLink} target='_blank'>{repoLink}</a></p>
+      <p><strong>Remember to add {window.location.href.split('/').slice(0, 3).join('/') + '/callback'} as a redirect uri in your app.</strong></p>
       <div>
         <label>Client Id</label>
         <input

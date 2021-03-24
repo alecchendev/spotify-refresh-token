@@ -48,7 +48,7 @@ app.get('/login', function(req, res) {
   const { clientId, clientSecret, scope, hostname} = req.query;
   client_id = clientId;
   client_secret = clientSecret;
-  redirect_uri = hostname + 'callback';
+  redirect_uri = hostname + '/callback';
   console.log(client_id + " " + client_secret + " " + scope);
 
   // your application requests authorization
