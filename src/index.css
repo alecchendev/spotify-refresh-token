@@ -14,6 +14,7 @@ code {
 
 #container {
   margin: auto;
+  padding: 20px;
   max-width: 800px;
   padding-top: 100px;
   padding-bottom: 100px;
