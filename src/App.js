@@ -163,11 +163,13 @@ function App() {
         <br/>
 
         {scopeElements}
-        <input
-          type="checkbox"
-          onChange={handleSelectAll}
-        />
-        <label style={{width: '200px', marginLeft: '10px', fontWeight: 'normal'}}>Select all</label>
+        <div style={{width: '250px', display: 'inline-block'}}>
+          <input
+            type="checkbox"
+            onChange={handleSelectAll}
+          />
+          <label style={{width: '200px', marginLeft: '10px', fontWeight: 'normal'}}>Select all</label>
+        </div>
 
         <br/>
 
