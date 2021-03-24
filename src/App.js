@@ -135,8 +135,7 @@ function App() {
   return (
     <div id='container'>
       <h1>{window.location.hostname}</h1>
-      <p>If this app helps you at all, feel free to star my repository so I can claim developer fame.</p>
-      <p>Repo: <a href={repoLink} rel="noreferrer" target='_blank'>{repoLink}</a></p>
+      <p>If this app helps you at all, feel free to star <a href={repoLink} rel="noreferrer" target='_blank'>my repo</a> so I can claim developer fame.</p>
       <p><strong>Remember to add {window.location.href.split('/').slice(0, 3).join('/') + '/callback'} as a redirect uri in your app.</strong></p>
 
       <div>
