@@ -1,15 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function App() {
-
-  const [ inputs, setInputs ] = React.useState({
+  const [inputs, setInputs] = useState({
     clientId: '',
     clientSecret: '',
     scope: '',
   });
 
-  const [ scopes, setScopes ] = React.useState({
+  const [scopes, setScopes] = useState({
     'ugc-image-upload': false,
     'user-read-recently-played': false,
     'user-top-read': false,
@@ -30,40 +29,36 @@ function App() {
     'user-read-private': false,
   });
 
-  const [ outputs, setOutputs ] = React.useState({
+  const [outputs, setOutputs] = useState({
     filled: false,
     accessToken: '',
     refreshToken: 'asdfasd',
-    data: {}
+    data: {},
   });
 
   function getHashParams() {
-    var hashParams = {};
-    var e, r = /([^&;=]+)=?([^&;]*)/g,
-        q = window.location.hash.substring(1);
-    while ( e = r.exec(q)) {
-       hashParams[e[1]] = decodeURIComponent(e[2]);
+    const hashParams = {};
+    let e; const r = /([^&;=]+)=?([^&;]*)/g;
+    const q = window.location.hash.substring(1);
+    while (e = r.exec(q)) {
+      hashParams[e[1]] = decodeURIComponent(e[2]);
     }
     return hashParams;
   }
 
-  React.useEffect(() => {
-
+  useEffect(() => {
     const callApi = async (params) => {
-
       let data = {};
       try {
-
         const response = await axios({
           method: 'get',
           url: 'https://api.spotify.com/v1/me',
-          headers: { 
-            'Authorization': 'Bearer ' + params.access_token,
+          headers: {
+            Authorization: `Bearer ${params.access_token}`,
           },
-          json: true
+          json: true,
         });
         data = response.data;
-
       } catch (err) {
         console.log(err);
       }
@@ -73,10 +68,10 @@ function App() {
         filled: true,
         accessToken: params.access_token,
         refreshToken: params.refresh_token,
-        data
+        data,
       });
-    }
-    
+    };
+
     const params = getHashParams();
 
     if (params.access_token && params.refresh_token) {
@@ -84,10 +79,10 @@ function App() {
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setInputs({
       ...inputs,
-      scope: Object.keys(scopes).filter((scope) => scopes[scope]).join(' ')
+      scope: Object.keys(scopes).filter((scope) => scopes[scope]).join(' '),
     });
   }, [scopes]);
 
@@ -99,44 +94,57 @@ function App() {
   };
 
   const handleCheck = (event) => {
-    const newScopes = {...scopes};
+    const newScopes = { ...scopes };
     newScopes[event.target.name] = !scopes[event.target.name];
     setScopes(newScopes);
   };
 
   const handleSelectAll = (event) => {
-    const newScopes = {...scopes};
-    for (let scope in newScopes) {
+    const newScopes = { ...scopes };
+    for (const scope in newScopes) {
       newScopes[scope] = event.target.checked;
     }
     setScopes(newScopes);
   };
 
-  const scopeElements = Object.keys(scopes).map((scope) => {
-    return <div key={scope} style={{width: '250px', display: 'inline-block'}}>
+  const scopeElements = Object.keys(scopes).map((scope) => (
+    <div key={scope} style={{ width: '250px', display: 'inline-block' }}>
       <input
-        type='checkbox'
+        type="checkbox"
         name={scope}
         checked={scopes[scope]}
         onChange={handleCheck}
       />
-      <label style={{width: '200px', marginLeft: '10px', fontWeight: 'normal'}}>{scope}</label>
+      <label style={{ width: '200px', marginLeft: '10px', fontWeight: 'normal' }}>{scope}</label>
     </div>
-  })
+  ));
 
-  const queryString = window.location.href.split('/').slice(0, 3).join('/')
-                      + "/login?clientId=" + inputs.clientId
-                      + "&clientSecret=" + inputs.clientSecret
-                      + "&scope=" + inputs.scope
-                      + "&hostname=" + window.location.href.split('/').slice(0, 3).join('/');
+  const queryString = `${window.location.href.split('/').slice(0, 3).join('/')
+  }/login?clientId=${inputs.clientId
+  }&clientSecret=${inputs.clientSecret
+  }&scope=${inputs.scope
+  }&hostname=${window.location.href.split('/').slice(0, 3).join('/')}`;
 
-  const repoLink = "https://github.com/alecchendev/spotify-refresh-token";
+  const repoLink = 'https://github.com/alecchendev/spotify-refresh-token';
 
   return (
-    <div id='container'>
-      <h1>{window.location.hostname}</h1>
-      <p>If this app helps you at all, feel free to star <a href={repoLink} rel="noreferrer" target='_blank'>my repo</a> so I can claim developer fame.</p>
-      <p><strong>Remember to add {window.location.href.split('/').slice(0, 3).join('/') + '/callback'} as a redirect uri in your app.</strong></p>
+    <div className="flex h-screen w-screen bg-gray-800 text-white">
+      <div className="m-auto">
+      <h1>Get your spotify refresh token!</h1>
+      <p>
+        If this app helps you at all, feel free to star
+        <a href={repoLink} rel="noreferrer" target="_blank">my repo</a>
+        {' '}
+        so I can claim developer fame.
+      </p>
+      <p>
+        <strong>
+          Remember to add
+          {`${window.location.href.split('/').slice(0, 3).join('/')}/callback`}
+          {' '}
+          as a redirect uri in your app.
+        </strong>
+      </p>
 
       <div>
         <label>Client Id</label>
@@ -147,7 +155,7 @@ function App() {
           onChange={handleChange}
         />
 
-        <br/>
+        <br />
 
         <label>Client Secret</label>
         <input
@@ -157,41 +165,44 @@ function App() {
           onChange={handleChange}
         />
 
-        <br/>
+        <br />
 
         <label>Scope</label>
-        <br/>
+        <br />
 
         {scopeElements}
-        <div style={{width: '250px', display: 'inline-block'}}>
+        <div style={{ width: '250px', display: 'inline-block' }}>
           <input
             type="checkbox"
             onChange={handleSelectAll}
           />
-          <label style={{width: '200px', marginLeft: '10px', fontWeight: 'normal'}}>Select all</label>
+          <label style={{ width: '200px', marginLeft: '10px', fontWeight: 'normal' }}>Select all</label>
         </div>
 
-        <br/>
+        <br />
 
-        <a style={{color: 'black'}} href={queryString}><button >Submit</button></a>
+        <a style={{ color: 'black' }} href={queryString}><button>Submit</button></a>
       </div>
 
-      {outputs.filled && 
+      {outputs.filled
+      && (
       <div>
         <h2>Results</h2>
         <div>
-          <label>Access token: </label>
+          <div>Access token: </div>
           <p>{outputs.accessToken}</p>
-          <br/>
-          <label>Refresh token: </label>
+          <br />
+          <div>Refresh token: </div>
           <p>{outputs.refreshToken}</p>
-          <br/>
-          <label>Example API call</label>
+          <br />
+          <div>Example API call</div>
           <p>{JSON.stringify(outputs.data)}</p>
         </div>
-      </div>}
-      
+      </div>
+      )}
 
+      </div>
+      
     </div>
   );
 }
