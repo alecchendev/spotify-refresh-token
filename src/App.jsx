@@ -60,12 +60,6 @@ function App() {
    * Also gets the local storage values for the client credentials and scope
    */
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('code');
-    if (token) {
-      setRefreshToken(token);
-    }
-    console.log(`Got refresh token: ${token}`);
     const storedSettings = JSON.parse(localStorage.getItem('settings'));
     if (storedSettings) {
       setSaveRefreshToken(storedSettings.saveRefreshToken);
@@ -87,7 +81,18 @@ function App() {
       localStorage.removeItem('clientSecret');
     }
 
-    console.log(`Got client credentials from local storage, set to: ${clientIdStored}, ${clientSecretStored}`);
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('code');
+    const storedToken = localStorage.getItem('refreshToken');
+
+    if (token) {
+      setRefreshToken(token);
+      if (saveRefreshToken) {
+        localStorage.setItem('refreshToken', token);
+      }
+    } else if (saveRefreshToken) {
+      setRefreshToken(storedToken);
+    }
 
     const locallyStoredScope = localStorage.getItem('scope');
     if (locallyStoredScope) {
@@ -99,7 +104,7 @@ function App() {
    * Gets the access token if the refresh token is set
    */
   useEffect(() => {
-    if (refreshToken.length > 0) {
+    if (refreshToken.length > 0 && clientId.length > 0 && clientSecret.length > 0) {
       getAccessToken(refreshToken, clientId, clientSecret).then((response) => {
         setAccessToken(response.data.access_token);
       }).catch((error) => {
@@ -153,7 +158,6 @@ function App() {
       isInitialMount.current = false;
     } else {
       localStorage.setItem('settings', JSON.stringify({ saveClientCredentials, saveRefreshToken }));
-      console.log(`storedSettings set to: ${JSON.stringify({ saveClientCredentials, saveRefreshToken })}`);
     }
   }, [saveRefreshToken, saveClientCredentials]);
 
@@ -198,7 +202,6 @@ function App() {
     newScopes[name] = !scopes[name];
     setScopes(newScopes);
     localStorage.setItem('scope', JSON.stringify(newScopes));
-    console.log(`Set scope to ${JSON.stringify(newScopes)}`);
   };
 
   // sets the "select all" checkbox to true if all scopes are selected
@@ -214,7 +217,6 @@ function App() {
       return acc;
     }, {});
     localStorage.setItem('scope', JSON.stringify(newScopes));
-    console.log(`Set scope to ${JSON.stringify(newScopes)}`);
 
     setScopes(newScopes);
   };
