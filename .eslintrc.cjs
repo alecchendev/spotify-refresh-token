@@ -1,7 +1,7 @@
 module.exports = {
   env: {
     browser: true,
-    es2021: true,
+    es6: true,
   },
   extends: [
     'plugin:react/recommended',
@@ -18,5 +18,9 @@ module.exports = {
     'react',
   ],
   rules: {
+    'no-console': 0,
+    'no-plusplus': 0,
+    'new-cap': 0,
+    'max-len': 0,
   },
 };
