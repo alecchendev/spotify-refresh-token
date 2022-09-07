@@ -91,7 +91,7 @@ function App() {
         localStorage.setItem('refreshToken', token);
       }
     } else if (saveRefreshToken) {
-      setRefreshToken(storedToken);
+      setRefreshToken(storedToken || '');
     }
 
     const locallyStoredScope = localStorage.getItem('scope');
@@ -165,21 +165,21 @@ function App() {
    * Removes the refresh token from local storage if the user doesn't want to save it
    */
   const handleSaveRefreshTokenChange = () => {
-    setSaveRefreshToken(!saveRefreshToken);
     if (!saveRefreshToken) {
       localStorage.removeItem('refreshToken');
     }
+    setSaveRefreshToken(!saveRefreshToken);
   };
 
   /**
    * Removes the client credentials from local storage if the user doesn't want to save them
    */
   const handleSaveClientCredentialsChange = () => {
-    setSaveClientCredentials(!saveClientCredentials);
     if (!saveClientCredentials) {
       localStorage.removeItem('clientId');
       localStorage.removeItem('clientSecret');
     }
+    setSaveClientCredentials(!saveClientCredentials);
   };
 
   /**
