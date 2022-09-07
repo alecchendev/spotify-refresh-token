@@ -79,6 +79,9 @@ function App() {
     return hashParams;
   }
 
+  /**
+   * Sets the refresh token if it is in the URL
+   */
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('code');
@@ -88,6 +91,9 @@ function App() {
     console.log(`Got refresh token: ${token}`);
   }, []);
 
+  /**
+   * Gets the access token if the refresh token is set
+   */
   useEffect(() => {
     if (refreshToken.length > 0) {
       getAccessToken(refreshToken, inputs.clientId, inputs.clientSecret).then((response) => {
@@ -98,6 +104,9 @@ function App() {
     }
   }, [refreshToken]);
 
+  /**
+   * Gets the data from the Spotify API if the access token is set
+   */
   useEffect(() => {
     const callApi = async (params) => {
       let data = {};
@@ -131,6 +140,9 @@ function App() {
     }
   }, []);
 
+  /**
+   * Sets the scopes to their set values
+   */
   useEffect(() => {
     setInputs({
       ...inputs,
@@ -175,9 +187,14 @@ function App() {
     setScopes(newScopes);
   };
 
-  const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${inputs.clientId}&scope=${encodeURIComponent(inputs.scope)}&redirect_uri=${encodeURIComponent(window.location.href.split('/').slice(0, 3).join('/').concat('/callback'))}&state=${generateRandomString(16)}`;
-
-  console.log(queryString);
+  const handleSubmit = () => {
+    /** we include the clientId and the clientSecret in the
+     *  redirect uri to avoid having to store them in the browser */
+    const redirectURI = encodeURIComponent(window.location.href.split('/').slice(0, 3).join('/').concat('/callback'));
+    const state = encodeURIComponent(`${inputs.clientId}:${inputs.clientSecret}`);
+    const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${inputs.clientId}&scope=${encodeURIComponent(inputs.scope)}&redirect_uri=${redirectURI}&state=${state}`;
+    window.location.replace(queryString);
+  };
 
   return (
     <div className="flex h-screen text-white m-5">
@@ -246,7 +263,7 @@ function App() {
           </button>
         </div>
 
-        <button type="submit" className="bg-slate-600 p-2 rounded-xl mb-5" onClick={() => window.location.replace(queryString)}>
+        <button type="submit" className="bg-slate-600 p-2 rounded-xl mb-5" onClick={handleSubmit}>
           Submit
         </button>
 
