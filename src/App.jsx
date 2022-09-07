@@ -255,9 +255,14 @@ function App() {
 
   return (
     <div className="flex h-screen text-white m-5">
-      <div className="m-auto xl:w-1/2 grid grid-cols-1 gap-3">
+      <div className="m-auto md:w-2/3 max-w-[1024px] grid grid-cols-1 gap-3">
         <div className="flex-1 text-4xl bg-slate-700 rounded-xl p-5 text-center underline">
           Get your spotify refresh token!
+        </div>
+        <div className="flex-1 text-xl bg-red-500 rounded-xl p-5 text-center underline">
+          Warning, this is not a secure way to get your refresh token! For the love of god and all that is holy, do not use this with your production keys!
+          <br />
+          For increased security, look over the code, run this locally and don&#39;t enable the save credentials option.
         </div>
         {accessToken.length > 0 && (
           <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
@@ -316,7 +321,7 @@ function App() {
           <div className="text-3xl underline m-3">
             Scope
           </div>
-          <div className="grid gap-2 xl:grid-cols-2">
+          <div className="grid gap-2 md:grid-cols-2">
             {Object.keys(scopes).map((singleScope) => (
               <button type="button" key={singleScope} className="p-2 flex bg-slate-600 cursor-pointer align-middle" onClick={() => handleCheck(singleScope)}>
                 <input
