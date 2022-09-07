@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import QueryString from 'query-string';
 import axios from 'axios';
 
@@ -48,7 +48,6 @@ function App() {
 
   const [refreshToken, setRefreshToken] = useState('');
   const [accessToken, setAccessToken] = useState('');
-
   const [saveRefreshToken, setSaveRefreshToken] = useState(true);
   const [saveClientCredentials, setSaveClientCredentials] = useState(false);
 
@@ -77,6 +76,26 @@ function App() {
       setRefreshToken(token);
     }
     console.log(`Got refresh token: ${token}`);
+    const storedSettings = JSON.parse(localStorage.getItem('settings'));
+    if (storedSettings) {
+      setSaveRefreshToken(storedSettings.saveRefreshToken);
+      setSaveClientCredentials(storedSettings.saveClientCredentials);
+    }
+
+    const clientId = localStorage.getItem('clientId');
+    const clientSecret = localStorage.getItem('clientSecret');
+
+    if (clientId && clientSecret) {
+      setInputs({
+        clientId,
+        clientSecret,
+        scope: [],
+      });
+    }
+    const scope = localStorage.getItem('scope');
+    if (scope) {
+      setScopes(JSON.parse(scope));
+    }
   }, []);
 
   /**
@@ -94,6 +113,7 @@ function App() {
 
   /**
    * Gets the data from the Spotify API if the access token is set
+   * TODO: refactor
    */
   useEffect(() => {
     const callApi = async (params) => {
@@ -132,15 +152,29 @@ function App() {
    * Sets the scopes to their set values
    */
   useEffect(() => {
+    const newScope = Object.keys(scopes).filter((scope) => scopes[scope]).join(' ');
     setInputs({
       ...inputs,
-      scope: Object.keys(scopes).filter((scope) => scopes[scope]).join(' '),
+      scope: newScope,
     });
   }, [scopes]);
 
-  const updateSettings = () => {
-    localStorage.setItem('settings', JSON.stringify({saveClientCredentials, saveRefreshToken}));
-  };
+  /**
+   * Allows the following "useEffect" to run only on updates
+   */
+  const isInitialMount = useRef(true);
+
+  /**
+   * Sets the settings to save credentials/tokens to local storage
+   */
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      localStorage.setItem('settings', JSON.stringify({ saveClientCredentials, saveRefreshToken }));
+      console.log(`storedSettings set to: ${JSON.stringify({ saveClientCredentials, saveRefreshToken })}`);
+    }
+  }, [saveRefreshToken, saveClientCredentials]);
 
   /**
    * Removes the refresh token from local storage if the user doesn't want to save it
@@ -150,7 +184,6 @@ function App() {
     if (!saveRefreshToken) {
       localStorage.removeItem('refreshToken');
     }
-    updateSettings();
   };
 
   /**
@@ -162,7 +195,6 @@ function App() {
       localStorage.removeItem('clientId');
       localStorage.removeItem('clientSecret');
     }
-    updateSettings();
   };
 
   /**
@@ -184,6 +216,8 @@ function App() {
     const newScopes = { ...scopes };
     newScopes[name] = !scopes[name];
     setScopes(newScopes);
+    localStorage.setItem('scope', JSON.stringify(newScopes));
+    console.log(`Set scope to ${JSON.stringify(newScopes)}`);
   };
 
   // sets the "select all" checkbox to true if all scopes are selected
@@ -198,11 +232,21 @@ function App() {
       acc[scope] = selectAll;
       return acc;
     }, {});
+    localStorage.setItem('scope', JSON.stringify(newScopes));
+    console.log(`Set scope to ${JSON.stringify(newScopes)}`);
 
     setScopes(newScopes);
   };
 
+  /**
+   * Handles the submit button click, which will redirect the user to the Spotify login page
+   */
   const handleSubmit = () => {
+    if (saveClientCredentials) {
+      localStorage.setItem('clientId', inputs.clientId);
+      localStorage.setItem('clientSecret', inputs.clientSecret);
+    }
+
     /** we include the clientId and the clientSecret in the
      *  redirect uri to avoid having to store them in the browser */
     const redirectURI = encodeURIComponent(window.location.href.split('/').slice(0, 3).join('/').concat('/callback'));
@@ -282,11 +326,11 @@ function App() {
           </div>
           <div className="grid grid-cols-2 gap-2 select-none">
             <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveClientCredentialsChange()}>
-              <input type="checkbox" checked={saveClientCredentials} className="m-auto" />
+              <input type="checkbox" checked={saveClientCredentials} className="m-auto" onChange={() => {}} />
               <div className="flex-1 cursor-pointer">Save Client Id/Secret</div>
             </button>
-            <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveRefreshTokenChange() }>
-              <input type="checkbox" checked={saveRefreshToken} className="m-auto" />
+            <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveRefreshTokenChange()}>
+              <input type="checkbox" checked={saveRefreshToken} className="m-auto" onChange={() => {}} />
               <div className="flex-1 cursor-pointer">Save Refresh Token</div>
             </button>
           </div>
