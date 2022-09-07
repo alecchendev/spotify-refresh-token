@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import QueryString from 'query-string';
 import axios from 'axios';
 
 /**
@@ -16,21 +17,20 @@ const generateRandomString = (length) => {
   return text;
 };
 
-const getAccessToken = (refreshToken, clientId, clientSecret) => {
-  axios.post('https://accounts.spotify.com/api/token', {
-    grant_type: 'refresh_token',
-    refresh_token: refreshToken,
-  }, {
+const getAccessToken = (refreshToken, clientId, clientSecret) => axios.post(
+  'https://accounts.spotify.com/api/token',
+  QueryString.stringify({
+    code: refreshToken,
+    redirect_uri: 'http://127.0.0.1:5173/callback',
+    grant_type: 'authorization_code',
+  }),
+  {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: new Buffer.From(`${clientId}:${clientSecret}`).toString('base64'),
+      Authorization: `Basic ${new Buffer(`${clientId}:${clientSecret}`).toString('base64')}`,
     },
-  }).then((response) => {
-    console.log(response.data);
-  }).catch((error) => {
-    console.log(error);
-  });
-};
+  },
+);
 
 function App() {
   const [inputs, setInputs] = useState({
@@ -61,10 +61,11 @@ function App() {
     streaming: false,
   });
 
+  const [refreshToken, setRefreshToken] = useState('');
+  const [accessToken, setAccessToken] = useState('');
+
   const [outputs, setOutputs] = useState({
     filled: false,
-    accessToken: '',
-    refreshToken: '',
     data: {},
   });
 
@@ -78,9 +79,24 @@ function App() {
     return hashParams;
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const refreshCode = urlParams.get('code');
-  console.log(refreshCode);
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('code');
+    if (token) {
+      setRefreshToken(token);
+    }
+    console.log(`Got refresh token: ${token}`);
+  }, []);
+
+  useEffect(() => {
+    if (refreshToken.length > 0) {
+      getAccessToken(refreshToken, inputs.clientId, inputs.clientSecret).then((response) => {
+        setAccessToken(response.data.access_token);
+      }).catch((error) => {
+        console.error(error);
+      });
+    }
+  }, [refreshToken]);
 
   useEffect(() => {
     const callApi = async (params) => {
@@ -122,6 +138,10 @@ function App() {
     });
   }, [scopes]);
 
+  /**
+   * Handles the client id/secret change
+   * @param {React.MouseEventHandler<HTMLInputElement>} event
+   */
   const handleChange = (event) => {
     setInputs({
       ...inputs,
@@ -129,14 +149,23 @@ function App() {
     });
   };
 
+  /**
+   * Handles the scope checkbox change
+   * @param {string} name
+   */
   const handleCheck = (name) => {
     const newScopes = { ...scopes };
     newScopes[name] = !scopes[name];
     setScopes(newScopes);
   };
 
+  // sets the "select all" checkbox to true if all scopes are selected
   const allSelected = Object.keys(scopes).every((scope) => scopes[scope]);
 
+  /**
+   * handles the "select all" checkbox change
+   * @param {boolean} selectAll
+   */
   const handleSelectAll = (selectAll) => {
     const newScopes = Object.keys(scopes).reduce((acc, scope) => {
       acc[scope] = selectAll;
@@ -152,7 +181,7 @@ function App() {
 
   return (
     <div className="flex h-screen text-white m-5">
-      <div className="m-auto md:w-1/2 grid grid-cols-1 gap-3">
+      <div className="m-auto xl:w-1/2 grid grid-cols-1 gap-3">
         <div className="flex-1 text-4xl bg-slate-700 rounded-xl p-5 text-center underline">
           Get your spotify refresh token!
         </div>
@@ -197,6 +226,7 @@ function App() {
                   type="checkbox"
                   className="flex-initial cursor-pointer"
                   id={scope}
+                  onChange={() => {}}
                   checked={scopes[scope]}
                 />
                 <div className="flex-1 cursor-pointer">{scope}</div>
@@ -209,13 +239,14 @@ function App() {
             <input
               type="checkbox"
               className="flex-initial cursor-pointer"
+              onChange={() => {}}
               checked={allSelected}
             />
             <div className="flex-1 cursor-pointer">Select all</div>
           </button>
         </div>
 
-        <button type="submit" className="bg-slate-600 p-2 rounded-xl" onClick={() => window.location.replace(queryString)}>
+        <button type="submit" className="bg-slate-600 p-2 rounded-xl mb-5" onClick={() => window.location.replace(queryString)}>
           Submit
         </button>
 
@@ -243,3 +274,5 @@ function App() {
 }
 
 export default App;
+
+// http://127.0.0.1:5173/callback?code=AQAqSrP5CBmGido8HjW4rMHlDp4PxYCC0p7YuesnGsl3fnHegLY2RjcvFrIVkLdAKGpWL2_SEl-6QZaf-uGVpR_B0XVFbwda4ZHhqxEGYBiLKhWBffsrX3AvFt4sbDZIDeHFEvmr55I4Bt1rVfc4-u_JC6mzzPcBNUVNzeDlFExFyzzMnjqoOZt4IGxARbfXyF8h10664DNKuyrgs2_liCrDia0BZEmhik5iMZFR0VEpLI-Hkzp0DYOyfW1czw&state=G45edP8IH49MRub2
