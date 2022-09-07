@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QueryString from 'query-string';
 import axios from 'axios';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 const getAccessToken = (refreshToken, clientId, clientSecret) => axios.post(
   'https://accounts.spotify.com/api/token',
@@ -18,11 +19,9 @@ const getAccessToken = (refreshToken, clientId, clientSecret) => axios.post(
 );
 
 function App() {
-  const [inputs, setInputs] = useState({
-    clientId: '',
-    clientSecret: '',
-    scope: '',
-  });
+  const [clientId, setClientId] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
+  const [scope, setScope] = useState('');
 
   const [scopes, setScopes] = useState({
     'ugc-image-upload': false,
@@ -68,6 +67,7 @@ function App() {
 
   /**
    * Sets the refresh token if it is in the URL
+   * Also gets the local storage values for the client credentials and scope
    */
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -82,19 +82,20 @@ function App() {
       setSaveClientCredentials(storedSettings.saveClientCredentials);
     }
 
-    const clientId = localStorage.getItem('clientId');
-    const clientSecret = localStorage.getItem('clientSecret');
-
-    if (clientId && clientSecret) {
-      setInputs({
-        clientId,
-        clientSecret,
-        scope: [],
-      });
+    const clientIdStored = localStorage.getItem('clientId');
+    if (clientIdStored) {
+      setClientId(clientIdStored);
     }
-    const scope = localStorage.getItem('scope');
-    if (scope) {
-      setScopes(JSON.parse(scope));
+    const clientSecretStored = localStorage.getItem('clientSecret');
+    if (clientSecretStored) {
+      setClientSecret(clientSecretStored);
+    }
+
+    console.log(`Got client credentials from local storage, set to: ${clientIdStored}, ${clientSecretStored}`);
+
+    const locallyStoredScope = localStorage.getItem('scope');
+    if (locallyStoredScope) {
+      setScopes(JSON.parse(locallyStoredScope));
     }
   }, []);
 
@@ -103,7 +104,7 @@ function App() {
    */
   useEffect(() => {
     if (refreshToken.length > 0) {
-      getAccessToken(refreshToken, inputs.clientId, inputs.clientSecret).then((response) => {
+      getAccessToken(refreshToken, clientId, clientSecret).then((response) => {
         setAccessToken(response.data.access_token);
       }).catch((error) => {
         console.error(error);
@@ -152,11 +153,8 @@ function App() {
    * Sets the scopes to their set values
    */
   useEffect(() => {
-    const newScope = Object.keys(scopes).filter((scope) => scopes[scope]).join(' ');
-    setInputs({
-      ...inputs,
-      scope: newScope,
-    });
+    const newScope = Object.keys(scopes).filter((singleScope) => scopes[singleScope]).join(' ');
+    setScope(newScope);
   }, [scopes]);
 
   /**
@@ -201,11 +199,11 @@ function App() {
    * Handles the client id/secret change
    * @param {React.MouseEventHandler<HTMLInputElement>} event
    */
-  const handleChange = (event) => {
-    setInputs({
-      ...inputs,
-      [event.target.name]: event.target.value,
-    });
+  const clientIdChange = (event) => {
+    setClientId(event.target.value);
+  };
+  const clientSecretChange = (event) => {
+    setClientSecret(event.target.value);
   };
 
   /**
@@ -221,15 +219,15 @@ function App() {
   };
 
   // sets the "select all" checkbox to true if all scopes are selected
-  const allSelected = Object.keys(scopes).every((scope) => scopes[scope]);
+  const allSelected = Object.keys(scopes).every((singleScope) => scopes[singleScope]);
 
   /**
    * handles the "select all" checkbox change
    * @param {boolean} selectAll
    */
   const handleSelectAll = (selectAll) => {
-    const newScopes = Object.keys(scopes).reduce((acc, scope) => {
-      acc[scope] = selectAll;
+    const newScopes = Object.keys(scopes).reduce((acc, singleScope) => {
+      acc[singleScope] = selectAll;
       return acc;
     }, {});
     localStorage.setItem('scope', JSON.stringify(newScopes));
@@ -243,15 +241,15 @@ function App() {
    */
   const handleSubmit = () => {
     if (saveClientCredentials) {
-      localStorage.setItem('clientId', inputs.clientId);
-      localStorage.setItem('clientSecret', inputs.clientSecret);
+      localStorage.setItem('clientId', clientId);
+      localStorage.setItem('clientSecret', clientSecret);
     }
 
     /** we include the clientId and the clientSecret in the
      *  redirect uri to avoid having to store them in the browser */
     const redirectURI = encodeURIComponent(window.location.href.split('/').slice(0, 3).join('/').concat('/callback'));
-    const state = encodeURIComponent(`${inputs.clientId}:${inputs.clientSecret}`);
-    const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${inputs.clientId}&scope=${encodeURIComponent(inputs.scope)}&redirect_uri=${redirectURI}&state=${state}`;
+    const state = encodeURIComponent(`${clientId}:${clientSecret}`);
+    const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${redirectURI}&state=${state}`;
     window.location.replace(queryString);
   };
 
@@ -261,7 +259,30 @@ function App() {
         <div className="flex-1 text-4xl bg-slate-700 rounded-xl p-5 text-center underline">
           Get your spotify refresh token!
         </div>
+        {accessToken.length > 0 && (
+          <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
+            <div className="text-2xl underline">Access Token</div>
+            <input type="text" value={accessToken} className="w-2/3 text-black m-2 p-1" />
+            <div className="flex justify-center">
+              <CopyToClipboard text={accessToken}>
+                <div className="cursor-pointer bg-slate-600 w-2/3 rounded-xl text-xl p-2 m-1">Copy to clipboard</div>
+              </CopyToClipboard>
+            </div>
 
+          </div>
+        )}
+        {refreshToken.length > 0 && (
+          <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
+            <div className="text-2xl underline">Refresh Token</div>
+            <input type="text" value={refreshToken} className="w-2/3 text-black m-2 p-1" />
+            <div className="flex justify-center">
+              <CopyToClipboard text={refreshToken}>
+                <div className="cursor-pointer bg-slate-600 w-2/3 rounded-xl text-xl p-2 m-1">Copy to clipboard</div>
+              </CopyToClipboard>
+            </div>
+
+          </div>
+        )}
         <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
           Remember to add
           {` ${window.location.href.split('/').slice(0, 3).join('/')}/callback `}
@@ -270,24 +291,24 @@ function App() {
 
         <div className="bg-slate-700 rounded-xl p-5 text-center grid grid-cols-1 gap-3">
           <div className="grid grid-cols-1 gap-2">
-            <div className="bg-gray-600 rounded-xl p-3 text-center flex">
+            <div className="bg-slate-600 rounded-xl p-3 text-center flex">
               <div className="flex-1">Client Id</div>
               <input
                 className="flex-initial bg-slate-300 text-black p-1"
                 type="text"
                 name="clientId"
-                value={inputs.clientId}
-                onChange={handleChange}
+                value={clientId}
+                onChange={clientIdChange}
               />
             </div>
-            <div className="bg-gray-600 rounded-xl p-3 text-center flex">
+            <div className="bg-slate-600 rounded-xl p-3 text-center flex">
               <div className="flex-1">Client Secret</div>
               <input
                 className="flex-initial bg-slate-300 text-black p-1"
                 type="text"
                 name="clientSecret"
-                value={inputs.clientSecret}
-                onChange={handleChange}
+                value={clientSecret}
+                onChange={clientSecretChange}
               />
             </div>
           </div>
@@ -296,16 +317,16 @@ function App() {
             Scope
           </div>
           <div className="grid gap-2 xl:grid-cols-2">
-            {Object.keys(scopes).map((scope) => (
-              <button type="button" key={scope} className="p-2 flex bg-slate-600 cursor-pointer align-middle" onClick={() => handleCheck(scope)}>
+            {Object.keys(scopes).map((singleScope) => (
+              <button type="button" key={singleScope} className="p-2 flex bg-slate-600 cursor-pointer align-middle" onClick={() => handleCheck(singleScope)}>
                 <input
                   type="checkbox"
                   className="flex-initial cursor-pointer m-auto"
-                  id={scope}
+                  id={singleScope}
                   onChange={() => {}}
-                  checked={scopes[scope]}
+                  checked={scopes[singleScope]}
                 />
-                <div className="flex-1 cursor-pointer">{scope}</div>
+                <div className="flex-1 cursor-pointer">{singleScope}</div>
               </button>
 
             ))}
@@ -339,23 +360,6 @@ function App() {
         <button type="submit" className="bg-slate-600 p-2 rounded-xl mb-5" onClick={handleSubmit}>
           Submit
         </button>
-
-        {outputs.filled
-      && (
-      <div>
-        <h2>Results</h2>
-        <div>
-          <div>Access token: </div>
-          <p>{outputs.accessToken}</p>
-          <br />
-          <div>Refresh token: </div>
-          <p>{outputs.refreshToken}</p>
-          <br />
-          <div>Example API call</div>
-          <p>{JSON.stringify(outputs.data)}</p>
-        </div>
-      </div>
-      )}
 
       </div>
 
