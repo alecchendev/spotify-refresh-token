@@ -18,6 +18,8 @@ const getAccessToken = (refreshToken, clientId, clientSecret) => axios.post(
   },
 );
 
+const callbackUri = `${window.location.href.split('/').slice(0, 3).join('/')}/callback`;
+
 function App() {
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
@@ -283,17 +285,24 @@ function App() {
           </div>
         )}
         {refreshToken.length === 0 && ( // only show the reminder if the user hasn't gotten the refresh token yet
-        <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
-          Remember to add
-          {` ${window.location.href.split('/').slice(0, 3).join('/')}/callback `}
-          as a redirect uri in your app.
+        <div className="grid md:grid-cols-2 grid-cols-1 gap-2">
+          <a href="https://developer.spotify.com/dashboard/applications" target="_blank" rel="noreferrer" className="flex-1 bg-slate-700 rounded-xl p-5 text-center hover:bg-slate-600">
+            <div className="text-2xl underline">Click here to go to the developer dashboard</div>
+          </a>
+          <CopyToClipboard text={callbackUri}>
+            <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center cursor-pointer hover:bg-slate-600">
+              Remember to add
+              {` ${callbackUri} `}
+              as a redirect uri in your app. Click this box to copy it to your clipboard.
+            </div>
+          </CopyToClipboard>
         </div>
         )}
 
         <div className="bg-slate-700 rounded-xl p-5 text-center grid grid-cols-1 gap-3">
           <div className="grid grid-cols-1 gap-2">
-            <div className="bg-slate-600 rounded-xl p-3 text-center flex">
-              <div className="flex-1">Client Id</div>
+            <div className="bg-slate-600 rounded-xl p-3 text-center flex align-middle">
+              <div className="flex-1 m-auto">Client Id</div>
               <input
                 className="flex-initial bg-slate-300 text-black p-1"
                 type="text"
@@ -302,8 +311,8 @@ function App() {
                 onChange={clientIdChange}
               />
             </div>
-            <div className="bg-slate-600 rounded-xl p-3 text-center flex">
-              <div className="flex-1">Client Secret</div>
+            <div className="bg-slate-600 rounded-xl p-3 text-center flex align-middle">
+              <div className="flex-1 m-auto">Client Secret</div>
               <input
                 className="flex-initial bg-slate-300 text-black p-1"
                 type="text"
@@ -319,7 +328,7 @@ function App() {
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             {Object.keys(scopes).map((singleScope) => (
-              <button type="button" key={singleScope} className="p-2 flex bg-slate-600 cursor-pointer align-middle" onClick={() => handleCheck(singleScope)}>
+              <button type="button" key={singleScope} className="p-2 flex bg-slate-600 hover:bg-slate-500 cursor-pointer align-middle" onClick={() => handleCheck(singleScope)}>
                 <input
                   type="checkbox"
                   className="flex-initial cursor-pointer m-auto"
@@ -333,7 +342,7 @@ function App() {
             ))}
           </div>
 
-          <button type="button" className="p-2 flex bg-slate-600 cursor-pointer align-middle" onClick={() => handleSelectAll(!allSelected)}>
+          <button type="button" className="p-2 flex bg-slate-600 hover:bg-slate-500 cursor-pointer align-middle" onClick={() => handleSelectAll(!allSelected)}>
             <input
               type="checkbox"
               className="flex-initial cursor-pointer m-auto"
@@ -347,18 +356,18 @@ function App() {
             Save credentials
           </div>
           <div className="grid grid-cols-2 gap-2 select-none">
-            <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveClientCredentialsChange()}>
+            <button type="button" className="bg-slate-600 hover:bg-slate-500 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveClientCredentialsChange()}>
               <input type="checkbox" checked={saveClientCredentials} className="m-auto" onChange={() => {}} />
               <div className="flex-1 cursor-pointer">Save Client Id/Secret</div>
             </button>
-            <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveRefreshTokenChange()}>
+            <button type="button" className="bg-slate-600 hover:bg-slate-500 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveRefreshTokenChange()}>
               <input type="checkbox" checked={saveRefreshToken} className="m-auto" onChange={() => {}} />
               <div className="flex-1 cursor-pointer">Save Refresh Token</div>
             </button>
           </div>
         </div>
 
-        <button type="submit" className="bg-slate-600 p-2 rounded-xl mb-5" onClick={handleSubmit}>
+        <button type="submit" className="bg-slate-700 hover:bg-slate-600 p-2 rounded-xl mb-5" onClick={handleSubmit}>
           Submit
         </button>
 
