@@ -64,7 +64,7 @@ function App() {
   const [refreshToken, setRefreshToken] = useState('');
   const [accessToken, setAccessToken] = useState('');
 
-  const [saveRefreshToken, setSaveRefreshToken] = useState(false);
+  const [saveRefreshToken, setSaveRefreshToken] = useState(true);
   const [saveClientCredentials, setSaveClientCredentials] = useState(false);
 
   const [outputs, setOutputs] = useState({
@@ -152,6 +152,25 @@ function App() {
       scope: Object.keys(scopes).filter((scope) => scopes[scope]).join(' '),
     });
   }, [scopes]);
+
+  /**
+   * Removes the refresh token from local storage if the user doesn't want to save it
+   */
+  useEffect(() => {
+    if (!saveRefreshToken) {
+      localStorage.removeItem('refreshToken');
+    }
+  }, [saveRefreshToken]);
+
+  /**
+   * Removes the client credentials from local storage if the user doesn't want to save them
+   */
+  useEffect(() => {
+    if (!saveClientCredentials) {
+      localStorage.removeItem('clientId');
+      localStorage.removeItem('clientSecret');
+    }
+  }, [saveClientCredentials]);
 
   /**
    * Handles the client id/secret change
@@ -265,6 +284,9 @@ function App() {
             <div className="flex-1 cursor-pointer">Select all</div>
           </button>
 
+          <div className="text-3xl underline m-3">
+            Save credentials
+          </div>
           <div className="grid grid-cols-2 gap-2 select-none">
             <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => setSaveClientCredentials(!saveClientCredentials)}>
               <input type="checkbox" checked={saveClientCredentials} className="m-auto" />
