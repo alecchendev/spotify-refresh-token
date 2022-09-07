@@ -27,7 +27,7 @@ const getAccessToken = (refreshToken, clientId, clientSecret) => axios.post(
   {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${new Buffer(`${clientId}:${clientSecret}`).toString('base64')}`,
+      Authorization: `Basic ${new Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
     },
   },
 );
