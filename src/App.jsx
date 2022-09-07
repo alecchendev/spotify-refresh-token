@@ -253,7 +253,7 @@ function App() {
         {accessToken.length > 0 && (
           <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
             <div className="text-2xl underline">Access Token (lasts 1 hour)</div>
-            <input type="text" value={accessToken} className="w-3/4 text-black m-2 p-1" />
+            <input type="text" readOnly value={accessToken} className="w-3/4 text-black m-2 p-1" />
             <div className="flex justify-center">
               <CopyToClipboard text={accessToken}>
                 <div className="cursor-pointer bg-slate-600 w-3/4 rounded-xl text-xl p-2 m-1">Copy to clipboard</div>
@@ -265,7 +265,7 @@ function App() {
         {refreshToken.length > 0 && (
           <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
             <div className="text-2xl underline">Refresh Token</div>
-            <input type="text" value={refreshToken} className="w-3/4 text-black m-2 p-1" />
+            <input type="text" readOnly value={refreshToken} className="w-3/4 text-black m-2 p-1" />
             <div className="flex justify-center">
               <CopyToClipboard text={refreshToken}>
                 <div className="cursor-pointer bg-slate-600 w-3/4 rounded-xl text-xl p-2 m-1">Copy to clipboard</div>
@@ -277,7 +277,7 @@ function App() {
         {outputs.filled && (
           <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
             <div className="text-2xl underline">Example Output</div>
-            <textarea className="w-3/4 text-sm text-black m-2 p-1 h-64" value={JSON.stringify(outputs.data, null, 2)} />
+            <textarea className="w-3/4 text-sm text-black m-2 p-1 h-64" readOnly value={JSON.stringify(outputs.data, null, 2)} />
           </div>
         )}
         {refreshToken.length === 0 && ( // only show the reminder if the user hasn't gotten the refresh token yet
