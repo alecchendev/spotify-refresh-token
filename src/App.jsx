@@ -55,16 +55,6 @@ function App() {
     data: {},
   });
 
-  function getHashParams() {
-    const hashParams = {};
-    let e; const r = /([^&;=]+)=?([^&;]*)/g;
-    const q = window.location.hash.substring(1);
-    while (e = r.exec(q)) {
-      hashParams[e[1]] = decodeURIComponent(e[2]);
-    }
-    return hashParams;
-  }
-
   /**
    * Sets the refresh token if it is in the URL
    * Also gets the local storage values for the client credentials and scope
@@ -117,37 +107,24 @@ function App() {
    * TODO: refactor
    */
   useEffect(() => {
-    const callApi = async (params) => {
-      let data = {};
-      try {
-        const response = await axios({
-          method: 'get',
-          url: 'https://api.spotify.com/v1/me',
-          headers: {
-            Authorization: `Bearer ${params.access_token}`,
-          },
-          json: true,
+    if (accessToken.length > 0) {
+      axios({
+        method: 'get',
+        url: 'https://api.spotify.com/v1/me',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        json: true,
+      }).then((response) => {
+        setOutputs({
+          filled: true,
+          data: response.data,
         });
-        data = response.data;
-      } catch (err) {
-        console.error(err);
-      }
-
-      setOutputs({
-        ...outputs,
-        filled: true,
-        accessToken: params.access_token,
-        refreshToken: params.refresh_token,
-        data,
+      }).catch((error) => {
+        console.error(error);
       });
-    };
-
-    const params = getHashParams();
-
-    if (params.access_token && params.refresh_token) {
-      callApi(params);
     }
-  }, []);
+  }, [accessToken]);
 
   /**
    * Sets the scopes to their set values
@@ -267,10 +244,10 @@ function App() {
         {accessToken.length > 0 && (
           <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
             <div className="text-2xl underline">Access Token</div>
-            <input type="text" value={accessToken} className="w-2/3 text-black m-2 p-1" />
+            <input type="text" value={accessToken} className="w-3/4 text-black m-2 p-1" />
             <div className="flex justify-center">
               <CopyToClipboard text={accessToken}>
-                <div className="cursor-pointer bg-slate-600 w-2/3 rounded-xl text-xl p-2 m-1">Copy to clipboard</div>
+                <div className="cursor-pointer bg-slate-600 w-3/4 rounded-xl text-xl p-2 m-1">Copy to clipboard</div>
               </CopyToClipboard>
             </div>
 
@@ -279,13 +256,19 @@ function App() {
         {refreshToken.length > 0 && (
           <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
             <div className="text-2xl underline">Refresh Token</div>
-            <input type="text" value={refreshToken} className="w-2/3 text-black m-2 p-1" />
+            <input type="text" value={refreshToken} className="w-3/4 text-black m-2 p-1" />
             <div className="flex justify-center">
               <CopyToClipboard text={refreshToken}>
-                <div className="cursor-pointer bg-slate-600 w-2/3 rounded-xl text-xl p-2 m-1">Copy to clipboard</div>
+                <div className="cursor-pointer bg-slate-600 w-3/4 rounded-xl text-xl p-2 m-1">Copy to clipboard</div>
               </CopyToClipboard>
             </div>
 
+          </div>
+        )}
+        {outputs.filled && (
+          <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
+            <div className="text-2xl underline">Example Output</div>
+            <textarea className="w-3/4 text-sm text-black m-2 p-1 h-64" value={JSON.stringify(outputs.data, null, 2)} />
           </div>
         )}
         <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
