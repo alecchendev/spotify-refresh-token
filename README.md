@@ -1,9 +1,10 @@
 # spotify-refresh-token
-A simple site for developers to easily get their own refresh token for Spotify's API.
+A simple site for developers to easily get their own refresh token / access token for Spotify's API.
 
-# TODO
+Unlike the original repo, this fork does not contact some random heroku server with your credentials. It's all done locally.
 
- - [ ] Add a checkbox to save the scope to local storage
- - [ ] Add a checkbox to save the refresh token to local storage
- - [ ] Add a checkbox to save the access token to local storage
- - [ ] Make the displaying of the refresh token better
+# How to run
+
+1. Clone the repo
+2. run 'yarn'
+3. run 'vite'
