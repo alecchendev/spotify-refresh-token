@@ -21,5 +21,6 @@ module.exports = {
     'no-console': 0,
     'no-plusplus': 0,
     'new-cap': 0,
+    'max-len': 0,
   },
 };
