@@ -64,6 +64,9 @@ function App() {
   const [refreshToken, setRefreshToken] = useState('');
   const [accessToken, setAccessToken] = useState('');
 
+  const [saveRefreshToken, setSaveRefreshToken] = useState(false);
+  const [saveClientCredentials, setSaveClientCredentials] = useState(false);
+
   const [outputs, setOutputs] = useState({
     filled: false,
     data: {},
@@ -238,10 +241,10 @@ function App() {
           </div>
           <div className="grid gap-2 xl:grid-cols-2">
             {Object.keys(scopes).map((scope) => (
-              <button type="button" key={scope} className="p-2 flex bg-slate-600 cursor-pointer" onClick={() => handleCheck(scope)}>
+              <button type="button" key={scope} className="p-2 flex bg-slate-600 cursor-pointer align-middle" onClick={() => handleCheck(scope)}>
                 <input
                   type="checkbox"
-                  className="flex-initial cursor-pointer"
+                  className="flex-initial cursor-pointer m-auto"
                   id={scope}
                   onChange={() => {}}
                   checked={scopes[scope]}
@@ -261,6 +264,17 @@ function App() {
             />
             <div className="flex-1 cursor-pointer">Select all</div>
           </button>
+
+          <div className="grid grid-cols-2 gap-2 select-none">
+            <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => setSaveClientCredentials(!saveClientCredentials)}>
+              <input type="checkbox" checked={saveClientCredentials} className="m-auto" />
+              <div className="flex-1 cursor-pointer">Save Client Id/Secret</div>
+            </button>
+            <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => setSaveRefreshToken(!saveRefreshToken)}>
+              <input type="checkbox" checked={saveRefreshToken} className="m-auto" />
+              <div className="flex-1 cursor-pointer">Save Refresh Token</div>
+            </button>
+          </div>
         </div>
 
         <button type="submit" className="bg-slate-600 p-2 rounded-xl mb-5" onClick={handleSubmit}>
