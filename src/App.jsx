@@ -3,11 +3,17 @@ import QueryString from 'query-string';
 import axios from 'axios';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 
+// Get the callback uri to give to spotify
+let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
+
+// if the callback uri ends with a slash, remove it
+callbackUri = callbackUri.charAt(callbackUri.length - 1) === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
+
 const getAccessToken = (refreshToken, clientId, clientSecret) => axios.post(
   'https://accounts.spotify.com/api/token',
   QueryString.stringify({
     code: refreshToken,
-    redirect_uri: 'http://127.0.0.1:5173/callback',
+    redirect_uri: callbackUri,
     grant_type: 'authorization_code',
   }),
   {
@@ -17,8 +23,6 @@ const getAccessToken = (refreshToken, clientId, clientSecret) => axios.post(
     },
   },
 );
-
-const callbackUri = `${window.location.href.split('/').slice(0, 3).join('/')}/callback`;
 
 function App() {
   const [clientId, setClientId] = useState('');
@@ -238,8 +242,7 @@ function App() {
 
     /** we include the clientId and the clientSecret in the
      *  redirect uri to avoid having to store them in the browser */
-    const redirectURI = encodeURIComponent(window.location.href.split('/').slice(0, 3).join('/').concat('/callback'));
-    const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${redirectURI}`;
+    const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${callbackUri}`;
     window.location.replace(queryString);
   };
 
