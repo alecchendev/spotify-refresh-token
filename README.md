@@ -2,7 +2,8 @@
 A simple site for developers to easily get their own refresh token / access token for Spotify's API.
 
 Unlike the original repo, this fork does not contact some random heroku server with your credentials. 
-It's all done as locally as possible, with only github being the people who can see your refresh token (and potentially youir clientID and clientSecret).
+It's all done as locally as possible, with only github being the people who can see your refresh token
+and potentially youir clientID/clientSecret, unless it's ran locally.
 
 # How to run
 
