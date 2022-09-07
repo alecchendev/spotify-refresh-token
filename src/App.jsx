@@ -81,6 +81,12 @@ function App() {
       setClientSecret(clientSecretStored);
     }
 
+    // these needed to be cleared if the user does not want to save them
+    if (storedSettings && !storedSettings.saveClientCredentials) {
+      localStorage.removeItem('clientId');
+      localStorage.removeItem('clientSecret');
+    }
+
     console.log(`Got client credentials from local storage, set to: ${clientIdStored}, ${clientSecretStored}`);
 
     const locallyStoredScope = localStorage.getItem('scope');
@@ -217,15 +223,18 @@ function App() {
    * Handles the submit button click, which will redirect the user to the Spotify login page
    */
   const handleSubmit = () => {
-    if (saveClientCredentials) {
-      localStorage.setItem('clientId', clientId);
-      localStorage.setItem('clientSecret', clientSecret);
-    }
+    /**
+     * Save the client credentials to local storage,
+     * if the user has decided not to save them, on the next page load they will be cleared
+     * This can be a security risk if the user never comes back to the page, with some error
+     * however, this should not be used for anything other than testing and development
+     */
+    localStorage.setItem('clientId', clientId);
+    localStorage.setItem('clientSecret', clientSecret);
 
     /** we include the clientId and the clientSecret in the
      *  redirect uri to avoid having to store them in the browser */
     const redirectURI = encodeURIComponent(window.location.href.split('/').slice(0, 3).join('/').concat('/callback'));
-    const state = encodeURIComponent(`${clientId}:${clientSecret}`);
     const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${redirectURI}`;
     window.location.replace(queryString);
   };
