@@ -60,7 +60,7 @@ function App() {
         });
         data = response.data;
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
 
       setOutputs({
@@ -93,98 +93,99 @@ function App() {
     });
   };
 
-  const handleCheck = (event) => {
+  const handleCheck = (name) => {
     const newScopes = { ...scopes };
-    newScopes[event.target.name] = !scopes[event.target.name];
+    newScopes[name] = !scopes[name];
     setScopes(newScopes);
   };
 
-  const handleSelectAll = (event) => {
-    const newScopes = { ...scopes };
-    for (const scope in newScopes) {
-      newScopes[scope] = event.target.checked;
-    }
+  const allSelected = Object.keys(scopes).every((scope) => scopes[scope]);
+
+  const handleSelectAll = (selectAll) => {
+    const newScopes = Object.keys(scopes).reduce((acc, scope) => {
+      acc[scope] = selectAll;
+      return acc;
+    }, {});
+
     setScopes(newScopes);
   };
 
-  const scopeElements = Object.keys(scopes).map((scope) => (
-    <div key={scope} style={{ width: '250px', display: 'inline-block' }}>
-      <input
-        type="checkbox"
-        name={scope}
-        checked={scopes[scope]}
-        onChange={handleCheck}
-      />
-      <label style={{ width: '200px', marginLeft: '10px', fontWeight: 'normal' }}>{scope}</label>
-    </div>
-  ));
-
-  const queryString = `${window.location.href.split('/').slice(0, 3).join('/')
-  }/login?clientId=${inputs.clientId
-  }&clientSecret=${inputs.clientSecret
-  }&scope=${inputs.scope
-  }&hostname=${window.location.href.split('/').slice(0, 3).join('/')}`;
-
-  const repoLink = 'https://github.com/alecchendev/spotify-refresh-token';
+  const queryString = `${window.location.href.split('/').slice(0, 3).join('/')}
+  /login?clientId=${inputs.clientId}
+  &clientSecret=${inputs.clientSecret}
+  &scope=${inputs.scope}
+  &hostname=${window.location.href.split('/').slice(0, 3).join('/')}`;
 
   return (
-    <div className="flex h-screen w-screen bg-gray-800 text-white">
-      <div className="m-auto">
-      <h1>Get your spotify refresh token!</h1>
-      <p>
-        If this app helps you at all, feel free to star
-        <a href={repoLink} rel="noreferrer" target="_blank">my repo</a>
-        {' '}
-        so I can claim developer fame.
-      </p>
-      <p>
-        <strong>
-          Remember to add
-          {`${window.location.href.split('/').slice(0, 3).join('/')}/callback`}
-          {' '}
-          as a redirect uri in your app.
-        </strong>
-      </p>
-
-      <div>
-        <label>Client Id</label>
-        <input
-          type="text"
-          name="clientId"
-          value={inputs.clientId}
-          onChange={handleChange}
-        />
-
-        <br />
-
-        <label>Client Secret</label>
-        <input
-          type="text"
-          name="clientSecret"
-          value={inputs.clientSecret}
-          onChange={handleChange}
-        />
-
-        <br />
-
-        <label>Scope</label>
-        <br />
-
-        {scopeElements}
-        <div style={{ width: '250px', display: 'inline-block' }}>
-          <input
-            type="checkbox"
-            onChange={handleSelectAll}
-          />
-          <label style={{ width: '200px', marginLeft: '10px', fontWeight: 'normal' }}>Select all</label>
+    <div className="flex h-screen text-white">
+      <div className="m-auto md:w-1/2 grid grid-cols-1 gap-3">
+        <div className="flex-1 text-4xl bg-slate-700 rounded-xl p-5 text-center underline">
+          Get your spotify refresh token!
         </div>
 
-        <br />
+        <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
+          Remember to add
+          {` ${window.location.href.split('/').slice(0, 3).join('/')}/callback `}
+          as a redirect uri in your app.
+        </div>
 
-        <a style={{ color: 'black' }} href={queryString}><button>Submit</button></a>
-      </div>
+        <div className="bg-slate-700 rounded-xl p-5 text-center grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-2">
+            <div className="bg-gray-600 rounded-xl p-3 text-center flex">
+              <div className="flex-1">Client Id</div>
+              <input
+                className="flex-initial bg-slate-300 text-black p-1"
+                type="text"
+                name="clientId"
+                value={inputs.clientId}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="bg-gray-600 rounded-xl p-3 text-center flex">
+              <div className="flex-1">Client Secret</div>
+              <input
+                className="flex-initial bg-slate-300 text-black p-1"
+                type="text"
+                name="clientSecret"
+                value={inputs.clientSecret}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
 
-      {outputs.filled
+          <div className="text-2xl underline">
+            Scope
+          </div>
+          <div className="grid gap-2 xl:grid-cols-2">
+            {Object.keys(scopes).map((scope) => (
+              <button type="button" key={scope} className="p-2 flex bg-slate-600 cursor-pointer" onClick={() => handleCheck(scope)}>
+                <input
+                  type="checkbox"
+                  className="flex-initial cursor-pointer"
+                  id={scope}
+                  checked={scopes[scope]}
+                />
+                <div className="flex-1 cursor-pointer">{scope}</div>
+              </button>
+
+            ))}
+          </div>
+
+          <button type="button" className="p-2 flex bg-slate-600 cursor-pointer" onClick={() => handleSelectAll(!allSelected)}>
+            <input
+              type="checkbox"
+              className="flex-initial cursor-pointer"
+              checked={allSelected}
+            />
+            <div className="flex-1 cursor-pointer">Select all</div>
+          </button>
+
+          <button type="submit" onClick={() => window.location.replace(queryString)}>
+            Submit
+          </button>
+        </div>
+
+        {outputs.filled
       && (
       <div>
         <h2>Results</h2>
@@ -202,7 +203,7 @@ function App() {
       )}
 
       </div>
-      
+
     </div>
   );
 }
