@@ -18,7 +18,5 @@ export default defineConfig({
       ],
     },
   },
-  build: {
-    base: '/spotify-token-getter/',
-  },
+  base: '/spotify-token-getter/', // right now, the base options being put under /build/ is not working
 });
