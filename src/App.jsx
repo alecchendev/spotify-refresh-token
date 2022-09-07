@@ -2,21 +2,6 @@ import React, { useState, useEffect } from 'react';
 import QueryString from 'query-string';
 import axios from 'axios';
 
-/**
- * Generates a random string containing numbers and letters
- * @param  {number} length The length of the string
- * @return {string} The generated string
- */
-const generateRandomString = (length) => {
-  let text = '';
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-  for (let i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
-};
-
 const getAccessToken = (refreshToken, clientId, clientSecret) => axios.post(
   'https://accounts.spotify.com/api/token',
   QueryString.stringify({
@@ -153,24 +138,32 @@ function App() {
     });
   }, [scopes]);
 
+  const updateSettings = () => {
+    localStorage.setItem('settings', JSON.stringify({saveClientCredentials, saveRefreshToken}));
+  };
+
   /**
    * Removes the refresh token from local storage if the user doesn't want to save it
    */
-  useEffect(() => {
+  const handleSaveRefreshTokenChange = () => {
+    setSaveRefreshToken(!saveRefreshToken);
     if (!saveRefreshToken) {
       localStorage.removeItem('refreshToken');
     }
-  }, [saveRefreshToken]);
+    updateSettings();
+  };
 
   /**
    * Removes the client credentials from local storage if the user doesn't want to save them
    */
-  useEffect(() => {
+  const handleSaveClientCredentialsChange = () => {
+    setSaveClientCredentials(!saveClientCredentials);
     if (!saveClientCredentials) {
       localStorage.removeItem('clientId');
       localStorage.removeItem('clientSecret');
     }
-  }, [saveClientCredentials]);
+    updateSettings();
+  };
 
   /**
    * Handles the client id/secret change
@@ -288,11 +281,11 @@ function App() {
             Save credentials
           </div>
           <div className="grid grid-cols-2 gap-2 select-none">
-            <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => setSaveClientCredentials(!saveClientCredentials)}>
+            <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveClientCredentialsChange()}>
               <input type="checkbox" checked={saveClientCredentials} className="m-auto" />
               <div className="flex-1 cursor-pointer">Save Client Id/Secret</div>
             </button>
-            <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => setSaveRefreshToken(!saveRefreshToken)}>
+            <button type="button" className="bg-slate-600 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveRefreshTokenChange() }>
               <input type="checkbox" checked={saveRefreshToken} className="m-auto" />
               <div className="flex-1 cursor-pointer">Save Refresh Token</div>
             </button>
