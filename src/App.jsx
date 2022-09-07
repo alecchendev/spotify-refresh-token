@@ -6,7 +6,7 @@ import axios from 'axios';
  * @param  {number} length The length of the string
  * @return {string} The generated string
  */
-const generateRandomString = function (length) {
+const generateRandomString = (length) => {
   let text = '';
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -58,6 +58,7 @@ function App() {
     'user-library-read': false,
     'user-read-email': false,
     'user-read-private': false,
+    streaming: false,
   });
 
   const [outputs, setOutputs] = useState({
