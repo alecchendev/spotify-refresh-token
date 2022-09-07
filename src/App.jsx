@@ -226,7 +226,7 @@ function App() {
      *  redirect uri to avoid having to store them in the browser */
     const redirectURI = encodeURIComponent(window.location.href.split('/').slice(0, 3).join('/').concat('/callback'));
     const state = encodeURIComponent(`${clientId}:${clientSecret}`);
-    const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${redirectURI}&state=${state}`;
+    const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${redirectURI}`;
     window.location.replace(queryString);
   };
 
@@ -243,7 +243,7 @@ function App() {
         </div>
         {accessToken.length > 0 && (
           <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
-            <div className="text-2xl underline">Access Token</div>
+            <div className="text-2xl underline">Access Token (lasts 1 hour)</div>
             <input type="text" value={accessToken} className="w-3/4 text-black m-2 p-1" />
             <div className="flex justify-center">
               <CopyToClipboard text={accessToken}>
@@ -271,11 +271,13 @@ function App() {
             <textarea className="w-3/4 text-sm text-black m-2 p-1 h-64" value={JSON.stringify(outputs.data, null, 2)} />
           </div>
         )}
+        {refreshToken.length === 0 && ( // only show the reminder if the user hasn't gotten the refresh token yet
         <div className="flex-1 bg-slate-700 rounded-xl p-5 text-center">
           Remember to add
           {` ${window.location.href.split('/').slice(0, 3).join('/')}/callback `}
           as a redirect uri in your app.
         </div>
+        )}
 
         <div className="bg-slate-700 rounded-xl p-5 text-center grid grid-cols-1 gap-3">
           <div className="grid grid-cols-1 gap-2">
@@ -320,10 +322,10 @@ function App() {
             ))}
           </div>
 
-          <button type="button" className="p-2 flex bg-slate-600 cursor-pointer" onClick={() => handleSelectAll(!allSelected)}>
+          <button type="button" className="p-2 flex bg-slate-600 cursor-pointer align-middle" onClick={() => handleSelectAll(!allSelected)}>
             <input
               type="checkbox"
-              className="flex-initial cursor-pointer"
+              className="flex-initial cursor-pointer m-auto"
               onChange={() => {}}
               checked={allSelected}
             />
