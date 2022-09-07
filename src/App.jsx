@@ -18,7 +18,11 @@ const getAccessToken = (refreshToken, clientId, clientSecret) => axios.post(
   },
 );
 
-const callbackUri = `${window.location.href.split('/').slice(0, 4).join('/')}`;
+// Get the callback uri to give to spotify
+let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
+
+// if the callback uri ends with a slash, remove it
+callbackUri = callbackUri.charAt(callbackUri.length - 1) === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
 
 function App() {
   const [clientId, setClientId] = useState('');
