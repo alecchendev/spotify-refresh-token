@@ -1,6 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+/**
+ * Generates a random string containing numbers and letters
+ * @param  {number} length The length of the string
+ * @return {string} The generated string
+ */
+const generateRandomString = function (length) {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < length; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+};
+
+const getAccessToken = (refreshToken, clientId, clientSecret) => {
+  axios.post('https://accounts.spotify.com/api/token', {
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+  }, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: new Buffer.From(`${clientId}:${clientSecret}`).toString('base64'),
+    },
+  }).then((response) => {
+    console.log(response.data);
+  }).catch((error) => {
+    console.log(error);
+  });
+};
+
 function App() {
   const [inputs, setInputs] = useState({
     clientId: '',
@@ -32,7 +63,7 @@ function App() {
   const [outputs, setOutputs] = useState({
     filled: false,
     accessToken: '',
-    refreshToken: 'asdfasd',
+    refreshToken: '',
     data: {},
   });
 
@@ -45,6 +76,10 @@ function App() {
     }
     return hashParams;
   }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const refreshCode = urlParams.get('code');
+  console.log(refreshCode);
 
   useEffect(() => {
     const callApi = async (params) => {
@@ -110,14 +145,12 @@ function App() {
     setScopes(newScopes);
   };
 
-  const queryString = `${window.location.href.split('/').slice(0, 3).join('/')}
-  /login?clientId=${inputs.clientId}
-  &clientSecret=${inputs.clientSecret}
-  &scope=${inputs.scope}
-  &hostname=${window.location.href.split('/').slice(0, 3).join('/')}`;
+  const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${inputs.clientId}&scope=${encodeURIComponent(inputs.scope)}&redirect_uri=${encodeURIComponent(window.location.href.split('/').slice(0, 3).join('/').concat('/callback'))}&state=${generateRandomString(16)}`;
+
+  console.log(queryString);
 
   return (
-    <div className="flex h-screen text-white">
+    <div className="flex h-screen text-white m-5">
       <div className="m-auto md:w-1/2 grid grid-cols-1 gap-3">
         <div className="flex-1 text-4xl bg-slate-700 rounded-xl p-5 text-center underline">
           Get your spotify refresh token!
@@ -153,7 +186,7 @@ function App() {
             </div>
           </div>
 
-          <div className="text-2xl underline">
+          <div className="text-3xl underline m-3">
             Scope
           </div>
           <div className="grid gap-2 xl:grid-cols-2">
@@ -179,11 +212,11 @@ function App() {
             />
             <div className="flex-1 cursor-pointer">Select all</div>
           </button>
-
-          <button type="submit" onClick={() => window.location.replace(queryString)}>
-            Submit
-          </button>
         </div>
+
+        <button type="submit" className="bg-slate-600 p-2 rounded-xl" onClick={() => window.location.replace(queryString)}>
+          Submit
+        </button>
 
         {outputs.filled
       && (
