@@ -18,4 +18,7 @@ export default defineConfig({
       ],
     },
   },
+  build: {
+    base: '/spotify-token-getter/',
+  },
 });
