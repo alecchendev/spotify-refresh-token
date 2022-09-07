@@ -238,7 +238,7 @@ function App() {
 
     /** we include the clientId and the clientSecret in the
      *  redirect uri to avoid having to store them in the browser */
-    const redirectURI = encodeURIComponent(window.location.href.split('/').slice(0, 3).join('/').concat('/spotify-token-getter'));
+    const redirectURI = encodeURIComponent(window.location.href.split('/').slice(0, 4).join('/'));
     const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${redirectURI}`;
     window.location.replace(queryString);
   };
