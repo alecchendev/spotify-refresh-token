@@ -3,6 +3,7 @@ import QueryString from 'query-string';
 import axios from 'axios';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import Checkbox from './components/Checkbox';
+import InputBox from './components/InputBox';
 
 // Get the callback uri to give to spotify
 let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
@@ -175,34 +176,21 @@ const App = () => {
   /**
    * Removes the refresh token from local storage if the user doesn't want to save it
    */
-  const handleSaveRefreshTokenChange = () => {
+  useEffect(() => {
     if (!saveRefreshToken) {
       localStorage.removeItem('refreshToken');
     }
-    setSaveRefreshToken(!saveRefreshToken);
-  };
+  }, [saveRefreshToken]);
 
   /**
    * Removes the client credentials from local storage if the user doesn't want to save them
    */
-  const handleSaveClientCredentialsChange = () => {
+  useEffect(() => {
     if (!saveClientCredentials) {
       localStorage.removeItem('clientId');
       localStorage.removeItem('clientSecret');
     }
-    setSaveClientCredentials(!saveClientCredentials);
-  };
-
-  /**
-   * Handles the client id/secret change
-   * @param {React.MouseEventHandler<HTMLInputElement>} event
-   */
-  const clientIdChange = (event) => {
-    setClientId(event.target.value);
-  };
-  const clientSecretChange = (event) => {
-    setClientSecret(event.target.value);
-  };
+  }, [saveClientCredentials]);
 
   /**
    * Handles the scope checkbox change
@@ -309,26 +297,8 @@ const App = () => {
 
         <div className="bg-slate-700 rounded-xl p-5 text-center grid grid-cols-1 gap-3">
           <div className="grid grid-cols-1 gap-2">
-            <div className="bg-slate-600 rounded-xl p-3 text-center align-middle">
-              <div className="inline mr-4">Client Id</div>
-              <input
-                className="bg-slate-300 text-black p-1 inline"
-                type="text"
-                name="clientId"
-                value={clientId}
-                onChange={clientIdChange}
-              />
-            </div>
-            <div className="bg-slate-600 rounded-xl p-3 text-center align-middle">
-              <div className="inline mr-4">Client Secret</div>
-              <input
-                className="bg-slate-300 text-black p-1 inline"
-                type="text"
-                name="clientSecret"
-                value={clientSecret}
-                onChange={clientSecretChange}
-              />
-            </div>
+            <InputBox label="Client ID" value={clientId} onChange={setClientId} />
+            <InputBox label="Client Secret" value={clientSecret} onChange={setClientSecret} />
           </div>
 
           <div className="text-3xl underline m-3">
@@ -346,8 +316,8 @@ const App = () => {
             Save credentials
           </div>
           <div className="grid grid-cols-2 gap-2 select-none">
-            <Checkbox checked={saveClientCredentials} onClick={() => handleSaveClientCredentialsChange()} label="Save Client Id/Secret" />
-            <Checkbox checked={saveRefreshToken} onClick={() => handleSaveRefreshTokenChange()} label="Save Refresh Token" />
+            <Checkbox checked={saveClientCredentials} onClick={() => setSaveClientCredentials(!saveClientCredentials)} label="Save Client Id/Secret" />
+            <Checkbox checked={saveRefreshToken} onClick={() => setSaveRefreshToken(!saveRefreshToken)} label="Save Refresh Token" />
           </div>
         </div>
 
