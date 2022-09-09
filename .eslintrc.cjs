@@ -22,5 +22,8 @@ module.exports = {
     'no-plusplus': 0,
     'new-cap': 0,
     'max-len': 0,
+    'react/function-component-definition': 0,
+    'prefer-arrow-callback': 2,
+    'react/prop-types': 0,
   },
 };
