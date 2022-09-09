@@ -14,8 +14,19 @@ callbackUri = callbackUri.charAt(callbackUri.length - 1) === '/' ? callbackUri.s
 const App = () => {
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
-  const [scope, setScope] = useState('');
 
+  const [refreshToken, setRefreshToken] = useState('');
+  const [accessToken, setAccessToken] = useState('');
+
+  const [saveRefreshToken, setSaveRefreshToken] = useState(true);
+  const [saveClientCredentials, setSaveClientCredentials] = useState(false);
+
+  const [outputs, setOutputs] = useState({
+    filled: false,
+    data: {},
+  });
+
+  const [scope, setScope] = useState('');
   const [scopes, setScopes] = useState({
     'ugc-image-upload': false,
     'user-read-recently-played': false,
@@ -36,16 +47,6 @@ const App = () => {
     'user-read-email': false,
     'user-read-private': false,
     streaming: false,
-  });
-
-  const [refreshToken, setRefreshToken] = useState('');
-  const [accessToken, setAccessToken] = useState('');
-  const [saveRefreshToken, setSaveRefreshToken] = useState(true);
-  const [saveClientCredentials, setSaveClientCredentials] = useState(false);
-
-  const [outputs, setOutputs] = useState({
-    filled: false,
-    data: {},
   });
 
   /**
