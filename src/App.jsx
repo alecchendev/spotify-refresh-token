@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import QueryString from 'query-string';
 import axios from 'axios';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import Checkbox from './components/Checkbox';
 
 // Get the callback uri to give to spotify
 let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
@@ -9,22 +10,7 @@ let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
 // if the callback uri ends with a slash, remove it
 callbackUri = callbackUri.charAt(callbackUri.length - 1) === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
 
-const getAccessToken = (refreshToken, clientId, clientSecret) => axios.post(
-  'https://accounts.spotify.com/api/token',
-  QueryString.stringify({
-    code: refreshToken,
-    redirect_uri: callbackUri,
-    grant_type: 'authorization_code',
-  }),
-  {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${new Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
-    },
-  },
-);
-
-function App() {
+const App = () => {
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
   const [scope, setScope] = useState('');
@@ -60,6 +46,26 @@ function App() {
     filled: false,
     data: {},
   });
+
+  /**
+   * Gets the access token from the API
+   *
+   * @returns {Promise<Object>} The response from the API containing the access token
+   */
+  const getAccessToken = () => axios.post(
+    'https://accounts.spotify.com/api/token',
+    QueryString.stringify({
+      code: refreshToken,
+      redirect_uri: callbackUri,
+      grant_type: 'authorization_code',
+    }),
+    {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${new Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+      },
+    },
+  );
 
   /**
    * Sets the refresh token if it is in the URL
@@ -111,7 +117,7 @@ function App() {
    */
   useEffect(() => {
     if (refreshToken.length > 0 && clientId.length > 0 && clientSecret.length > 0) {
-      getAccessToken(refreshToken, clientId, clientSecret).then((response) => {
+      getAccessToken().then((response) => {
         setAccessToken(response.data.access_token);
       }).catch((error) => {
         console.error(error);
@@ -121,7 +127,6 @@ function App() {
 
   /**
    * Gets the data from the Spotify API if the access token is set
-   * TODO: refactor
    */
   useEffect(() => {
     if (accessToken.length > 0) {
@@ -331,42 +336,18 @@ function App() {
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             {Object.keys(scopes).map((singleScope) => (
-              <button type="button" key={singleScope} className="p-2 flex bg-slate-600 hover:bg-slate-500 cursor-pointer align-middle" onClick={() => handleCheck(singleScope)}>
-                <input
-                  type="checkbox"
-                  className="flex-initial cursor-pointer m-auto"
-                  id={singleScope}
-                  onChange={() => {}}
-                  checked={scopes[singleScope]}
-                />
-                <div className="flex-1 cursor-pointer">{singleScope}</div>
-              </button>
-
+              <Checkbox checked={scopes[singleScope]} onClick={() => handleCheck(singleScope)} label={singleScope} />
             ))}
           </div>
 
-          <button type="button" className="p-2 flex bg-slate-600 hover:bg-slate-500 cursor-pointer align-middle" onClick={() => handleSelectAll(!allSelected)}>
-            <input
-              type="checkbox"
-              className="flex-initial cursor-pointer m-auto"
-              onChange={() => {}}
-              checked={allSelected}
-            />
-            <div className="flex-1 cursor-pointer">Select all</div>
-          </button>
+          <Checkbox checked={allSelected} onClick={() => handleSelectAll(!allSelected)} label="Select all" />
 
           <div className="text-3xl underline m-3">
             Save credentials
           </div>
           <div className="grid grid-cols-2 gap-2 select-none">
-            <button type="button" className="bg-slate-600 hover:bg-slate-500 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveClientCredentialsChange()}>
-              <input type="checkbox" checked={saveClientCredentials} className="m-auto" onChange={() => {}} />
-              <div className="flex-1 cursor-pointer">Save Client Id/Secret</div>
-            </button>
-            <button type="button" className="bg-slate-600 hover:bg-slate-500 cursor-pointer p-2 flex align-middle" onClick={() => handleSaveRefreshTokenChange()}>
-              <input type="checkbox" checked={saveRefreshToken} className="m-auto" onChange={() => {}} />
-              <div className="flex-1 cursor-pointer">Save Refresh Token</div>
-            </button>
+            <Checkbox checked={saveClientCredentials} onClick={() => handleSaveClientCredentialsChange()} label="Save Client Id/Secret" />
+            <Checkbox checked={saveRefreshToken} onClick={() => handleSaveRefreshTokenChange()} label="Save Refresh Token" />
           </div>
         </div>
 
@@ -378,6 +359,6 @@ function App() {
 
     </div>
   );
-}
+};
 
 export default App;
