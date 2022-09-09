@@ -309,20 +309,20 @@ const App = () => {
 
         <div className="bg-slate-700 rounded-xl p-5 text-center grid grid-cols-1 gap-3">
           <div className="grid grid-cols-1 gap-2">
-            <div className="bg-slate-600 rounded-xl p-3 text-center flex align-middle">
-              <div className="flex-1 m-auto">Client Id</div>
+            <div className="bg-slate-600 rounded-xl p-3 text-center align-middle">
+              <div className="inline mr-4">Client Id</div>
               <input
-                className="flex-initial bg-slate-300 text-black p-1"
+                className="bg-slate-300 text-black p-1 inline"
                 type="text"
                 name="clientId"
                 value={clientId}
                 onChange={clientIdChange}
               />
             </div>
-            <div className="bg-slate-600 rounded-xl p-3 text-center flex align-middle">
-              <div className="flex-1 m-auto">Client Secret</div>
+            <div className="bg-slate-600 rounded-xl p-3 text-center align-middle">
+              <div className="inline mr-4">Client Secret</div>
               <input
-                className="flex-initial bg-slate-300 text-black p-1"
+                className="bg-slate-300 text-black p-1 inline"
                 type="text"
                 name="clientSecret"
                 value={clientSecret}
