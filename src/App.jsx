@@ -18,7 +18,7 @@ const App = () => {
   const [refreshToken, setRefreshToken] = useState('');
   const [accessToken, setAccessToken] = useState('');
 
-  const [saveRefreshToken, setSaveRefreshToken] = useState(true);
+  const [saveRefreshToken, setSaveRefreshToken] = useState(false);
   const [saveClientCredentials, setSaveClientCredentials] = useState(false);
 
   const [outputs, setOutputs] = useState({
@@ -247,7 +247,7 @@ const App = () => {
           Get your spotify refresh token!
         </div>
         <div className="flex-1 text-xl bg-red-500 rounded-xl p-5 text-center underline">
-          Warning, this is not a secure way to get your refresh token! For the love of god and all that is holy, do not use this with your production keys!
+          Warning, this is not a secure way to get your refresh token! Do not use this with your production keys!
           <br />
           For increased security, look over the code, run this locally and don&#39;t enable the save credentials option.
         </div>
