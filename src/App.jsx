@@ -297,7 +297,7 @@ const App = () => {
         )}
 
         <div className="bg-slate-700 rounded-xl p-5 text-center grid grid-cols-1 gap-3">
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <InputBox label="Client ID" value={clientId} onChange={setClientId} />
             <InputBox label="Client Secret" value={clientSecret} onChange={setClientSecret} />
           </div>
