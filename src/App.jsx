@@ -246,6 +246,11 @@ const App = () => {
         <div className="flex-1 text-4xl bg-slate-700 rounded-xl p-5 text-center underline">
           Get your spotify refresh token!
         </div>
+        <div className="flex-1 bg-slate-700 rounded-xl p-5 text-base text-center no-underline">
+          If this app helps you at all, feel free to star <a href="https://github.com/alecchendev/spotify-refresh-token" target="_blank" rel="noreferrer" className="underline">the repo</a>!
+          Special thanks to <a href="https://github.com/Acorn221" target="_blank" rel="noreferrer" className="underline">James Arnott</a> for contributing to this project.
+
+        </div>
         <div className="flex-1 text-xl bg-red-500 rounded-xl p-5 text-center underline">
           Warning, this is not a secure way to get your refresh token! Do not use this with your production keys!
           <br />
