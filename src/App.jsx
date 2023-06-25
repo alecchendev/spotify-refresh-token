@@ -5,11 +5,44 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 import Checkbox from './components/Checkbox';
 import InputBox from './components/InputBox';
 
+const allScopes = [
+  'ugc-image-upload',
+  'user-read-recently-played',
+  'user-top-read',
+  'user-read-playback-position',
+  'user-read-playback-state',
+  'user-modify-playback-state',
+  'user-read-currently-playing',
+  'app-remote-control',
+  'playlist-modify-public',
+  'playlist-modify-private',
+  'playlist-read-private',
+  'playlist-read-collaborative',
+  'user-follow-modify',
+  'user-follow-read',
+  'user-library-modify',
+  'user-library-read',
+  'user-read-email',
+  'user-read-private',
+  'streaming',
+];
+
 // Get the callback uri to give to spotify
 let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
 
 // if the callback uri ends with a slash, remove it
 callbackUri = callbackUri.charAt(callbackUri.length - 1) === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
+
+// get token and scopes from url query params
+const urlParams = new URLSearchParams(window.location.search);
+const token = urlParams.get('code');
+const urlScopes = urlParams.getAll('scope').filter(s => allScopes.includes(s));
+
+// load and parse scopes from local storage
+const localScopes = (() => {
+  const localScopes = JSON.parse(localStorage.getItem('scope'));
+  return Array.isArray(localScopes) ? localScopes : [];
+})();
 
 const App = () => {
   const [clientId, setClientId] = useState('');
@@ -26,28 +59,10 @@ const App = () => {
     data: {},
   });
 
-  const [scope, setScope] = useState('');
-  const [scopes, setScopes] = useState({
-    'ugc-image-upload': false,
-    'user-read-recently-played': false,
-    'user-top-read': false,
-    'user-read-playback-position': false,
-    'user-read-playback-state': false,
-    'user-modify-playback-state': false,
-    'user-read-currently-playing': false,
-    'app-remote-control': false,
-    'playlist-modify-public': false,
-    'playlist-modify-private': false,
-    'playlist-read-private': false,
-    'playlist-read-collaborative': false,
-    'user-follow-modify': false,
-    'user-follow-read': false,
-    'user-library-modify': false,
-    'user-library-read': false,
-    'user-read-email': false,
-    'user-read-private': false,
-    streaming: false,
-  });
+  const [scopes, setScopes] = useState([
+    ...localScopes,
+    ...urlScopes,
+  ]);
 
   /**
    * Gets the access token from the API
@@ -95,10 +110,7 @@ const App = () => {
       localStorage.removeItem('clientSecret');
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('code');
     const storedToken = localStorage.getItem('refreshToken');
-
     if (token) {
       setRefreshToken(token);
       if (saveRefreshToken) {
@@ -106,11 +118,6 @@ const App = () => {
       }
     } else if (saveRefreshToken) {
       setRefreshToken(storedToken || '');
-    }
-
-    const locallyStoredScope = localStorage.getItem('scope');
-    if (locallyStoredScope) {
-      setScopes(JSON.parse(locallyStoredScope));
     }
   }, []);
 
@@ -154,8 +161,7 @@ const App = () => {
    * Sets the scopes to their set values
    */
   useEffect(() => {
-    const newScope = Object.keys(scopes).filter((singleScope) => scopes[singleScope]).join(' ');
-    setScope(newScope);
+    localStorage.setItem('scope', JSON.stringify(scopes));
   }, [scopes]);
 
   /**
@@ -197,29 +203,15 @@ const App = () => {
    * Handles the scope checkbox change
    * @param {string} name
    */
-  const handleCheck = (name) => {
-    const newScopes = { ...scopes };
-    newScopes[name] = !scopes[name];
-    setScopes(newScopes);
-    localStorage.setItem('scope', JSON.stringify(newScopes));
-  };
+  const handleCheck = name => setScopes(scopes.includes(name) ? scopes.filter(s => s !== name) : [...scopes, name]);
 
   // sets the "select all" checkbox to true if all scopes are selected
-  const allSelected = Object.keys(scopes).every((singleScope) => scopes[singleScope]);
+  const allSelected = allScopes.every(s => scopes.includes(s));
 
   /**
    * handles the "select all" checkbox change
-   * @param {boolean} selectAll
    */
-  const handleSelectAll = (selectAll) => {
-    const newScopes = Object.keys(scopes).reduce((acc, singleScope) => {
-      acc[singleScope] = selectAll;
-      return acc;
-    }, {});
-    localStorage.setItem('scope', JSON.stringify(newScopes));
-
-    setScopes(newScopes);
-  };
+  const handleSelectAll = () => setScopes(allSelected ? [] : allScopes);
 
   /**
    * Handles the submit button click, which will redirect the user to the Spotify login page
@@ -236,6 +228,7 @@ const App = () => {
 
     /** we include the clientId and the clientSecret in the
      *  redirect uri to avoid having to store them in the browser */
+    const scope = scopes.join(' ');
     const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${callbackUri}`;
     window.location.replace(queryString);
   };
@@ -311,12 +304,12 @@ const App = () => {
             Scope
           </div>
           <div className="grid gap-2 md:grid-cols-2">
-            {Object.keys(scopes).map((singleScope) => (
-              <Checkbox checked={scopes[singleScope]} onClick={() => handleCheck(singleScope)} label={singleScope} />
+            {allScopes.map(s => (
+              <Checkbox checked={scopes.includes(s)} onClick={() => handleCheck(s)} label={s} />
             ))}
           </div>
 
-          <Checkbox checked={allSelected} onClick={() => handleSelectAll(!allSelected)} label="Select all" />
+          <Checkbox checked={allSelected} onClick={handleSelectAll} label="Select all" />
 
           <div className="text-3xl underline m-3">
             Save credentials
