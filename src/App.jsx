@@ -5,11 +5,38 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 import Checkbox from './components/Checkbox';
 import InputBox from './components/InputBox';
 
+const allScopes = [
+  'ugc-image-upload',
+  'user-read-recently-played',
+  'user-top-read',
+  'user-read-playback-position',
+  'user-read-playback-state',
+  'user-modify-playback-state',
+  'user-read-currently-playing',
+  'app-remote-control',
+  'playlist-modify-public',
+  'playlist-modify-private',
+  'playlist-read-private',
+  'playlist-read-collaborative',
+  'user-follow-modify',
+  'user-follow-read',
+  'user-library-modify',
+  'user-library-read',
+  'user-read-email',
+  'user-read-private',
+  'streaming',
+];
+
 // Get the callback uri to give to spotify
 let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
 
 // if the callback uri ends with a slash, remove it
 callbackUri = callbackUri.charAt(callbackUri.length - 1) === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
+
+// get token and scopes from url query params
+const urlParams = new URLSearchParams(window.location.search);
+const token = urlParams.get('code');
+const urlScopes = urlParams.getAll('scope').filter(s => allScopes.includes(s));
 
 const App = () => {
   const [clientId, setClientId] = useState('');
@@ -28,25 +55,12 @@ const App = () => {
 
   const [scope, setScope] = useState('');
   const [scopes, setScopes] = useState({
-    'ugc-image-upload': false,
-    'user-read-recently-played': false,
-    'user-top-read': false,
-    'user-read-playback-position': false,
-    'user-read-playback-state': false,
-    'user-modify-playback-state': false,
-    'user-read-currently-playing': false,
-    'app-remote-control': false,
-    'playlist-modify-public': false,
-    'playlist-modify-private': false,
-    'playlist-read-private': false,
-    'playlist-read-collaborative': false,
-    'user-follow-modify': false,
-    'user-follow-read': false,
-    'user-library-modify': false,
-    'user-library-read': false,
-    'user-read-email': false,
-    'user-read-private': false,
-    streaming: false,
+    // default all accepted scopes to not selected
+    ...allScopes.reduce((selected, scope) => (selected[scope] = false, selected), {}),
+    // load scopes from local storage
+    ...JSON.parse(localStorage.getItem('scope')),
+    // select all scopes from url
+    ...urlScopes.reduce((selected, scope) => (selected[scope] = true, selected), {}),
   });
 
   /**
@@ -95,10 +109,7 @@ const App = () => {
       localStorage.removeItem('clientSecret');
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('code');
     const storedToken = localStorage.getItem('refreshToken');
-
     if (token) {
       setRefreshToken(token);
       if (saveRefreshToken) {
@@ -106,11 +117,6 @@ const App = () => {
       }
     } else if (saveRefreshToken) {
       setRefreshToken(storedToken || '');
-    }
-
-    const locallyStoredScope = localStorage.getItem('scope');
-    if (locallyStoredScope) {
-      setScopes(JSON.parse(locallyStoredScope));
     }
   }, []);
 
@@ -154,6 +160,8 @@ const App = () => {
    * Sets the scopes to their set values
    */
   useEffect(() => {
+    localStorage.setItem('scope', JSON.stringify(scopes));
+
     const newScope = Object.keys(scopes).filter((singleScope) => scopes[singleScope]).join(' ');
     setScope(newScope);
   }, [scopes]);
@@ -201,7 +209,6 @@ const App = () => {
     const newScopes = { ...scopes };
     newScopes[name] = !scopes[name];
     setScopes(newScopes);
-    localStorage.setItem('scope', JSON.stringify(newScopes));
   };
 
   // sets the "select all" checkbox to true if all scopes are selected
@@ -216,7 +223,6 @@ const App = () => {
       acc[singleScope] = selectAll;
       return acc;
     }, {});
-    localStorage.setItem('scope', JSON.stringify(newScopes));
 
     setScopes(newScopes);
   };
