@@ -59,7 +59,6 @@ const App = () => {
     data: {},
   });
 
-  const [scope, setScope] = useState('');
   const [scopes, setScopes] = useState([
     ...localScopes,
     ...urlScopes,
@@ -163,9 +162,6 @@ const App = () => {
    */
   useEffect(() => {
     localStorage.setItem('scope', JSON.stringify(scopes));
-
-    const newScope = Object.keys(scopes).filter((singleScope) => scopes[singleScope]).join(' ');
-    setScope(newScope);
   }, [scopes]);
 
   /**
@@ -232,6 +228,7 @@ const App = () => {
 
     /** we include the clientId and the clientSecret in the
      *  redirect uri to avoid having to store them in the browser */
+    const scope = scopes.join(' ');
     const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${callbackUri}`;
     window.location.replace(queryString);
   };
