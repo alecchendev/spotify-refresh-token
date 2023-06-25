@@ -38,6 +38,12 @@ const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get('code');
 const urlScopes = urlParams.getAll('scope').filter(s => allScopes.includes(s));
 
+// load and parse scopes from local storage
+const localScopes = (() => {
+  const localScopes = JSON.parse(localStorage.getItem('scope'));
+  return Array.isArray(localScopes) ? localScopes : [];
+})();
+
 const App = () => {
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
@@ -54,14 +60,10 @@ const App = () => {
   });
 
   const [scope, setScope] = useState('');
-  const [scopes, setScopes] = useState({
-    // default all accepted scopes to not selected
-    ...allScopes.reduce((selected, scope) => (selected[scope] = false, selected), {}),
-    // load scopes from local storage
-    ...JSON.parse(localStorage.getItem('scope')),
-    // select all scopes from url
-    ...urlScopes.reduce((selected, scope) => (selected[scope] = true, selected), {}),
-  });
+  const [scopes, setScopes] = useState([
+    ...localScopes,
+    ...urlScopes,
+  ]);
 
   /**
    * Gets the access token from the API
@@ -205,27 +207,15 @@ const App = () => {
    * Handles the scope checkbox change
    * @param {string} name
    */
-  const handleCheck = (name) => {
-    const newScopes = { ...scopes };
-    newScopes[name] = !scopes[name];
-    setScopes(newScopes);
-  };
+  const handleCheck = name => setScopes(scopes.includes(name) ? scopes.filter(s => s !== name) : [...scopes, name]);
 
   // sets the "select all" checkbox to true if all scopes are selected
-  const allSelected = Object.keys(scopes).every((singleScope) => scopes[singleScope]);
+  const allSelected = allScopes.every(s => scopes.includes(s));
 
   /**
    * handles the "select all" checkbox change
-   * @param {boolean} selectAll
    */
-  const handleSelectAll = (selectAll) => {
-    const newScopes = Object.keys(scopes).reduce((acc, singleScope) => {
-      acc[singleScope] = selectAll;
-      return acc;
-    }, {});
-
-    setScopes(newScopes);
-  };
+  const handleSelectAll = () => setScopes(allSelected ? [] : allScopes);
 
   /**
    * Handles the submit button click, which will redirect the user to the Spotify login page
@@ -317,12 +307,12 @@ const App = () => {
             Scope
           </div>
           <div className="grid gap-2 md:grid-cols-2">
-            {Object.keys(scopes).map((singleScope) => (
-              <Checkbox checked={scopes[singleScope]} onClick={() => handleCheck(singleScope)} label={singleScope} />
+            {allScopes.map(s => (
+              <Checkbox checked={scopes.includes(s)} onClick={() => handleCheck(s)} label={s} />
             ))}
           </div>
 
-          <Checkbox checked={allSelected} onClick={() => handleSelectAll(!allSelected)} label="Select all" />
+          <Checkbox checked={allSelected} onClick={handleSelectAll} label="Select all" />
 
           <div className="text-3xl underline m-3">
             Save credentials
