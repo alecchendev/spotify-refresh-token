@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import QueryString from 'query-string';
 import axios from 'axios';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { useSearchParams } from 'react-router-dom';
 import Checkbox from './components/Checkbox';
 import InputBox from './components/InputBox';
 
@@ -33,17 +34,6 @@ let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
 // if the callback uri ends with a slash, remove it
 callbackUri = callbackUri.charAt(callbackUri.length - 1) === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
 
-// get token and scopes from url query params
-const urlParams = new URLSearchParams(window.location.search);
-const token = urlParams.get('code');
-const urlScopes = urlParams.getAll('scope').filter(s => allScopes.includes(s));
-
-// load and parse scopes from local storage
-const localScopes = (() => {
-  const localScopes = JSON.parse(localStorage.getItem('scope'));
-  return Array.isArray(localScopes) ? localScopes : [];
-})();
-
 const App = () => {
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
@@ -59,10 +49,14 @@ const App = () => {
     data: {},
   });
 
-  const [scopes, setScopes] = useState([
-    ...localScopes,
-    ...urlScopes,
-  ]);
+  // get token and scopes from url query params
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const token = searchParams.get('code');
+  const scopes = searchParams.getAll('scope');
+
+  const setScopes = (...scopes) => setSearchParams(scopes.map(s => ['scope', s]));
+  const hasScope = scope => scopes.includes(scope);
 
   /**
    * Gets the access token from the API
@@ -158,13 +152,6 @@ const App = () => {
   }, [accessToken]);
 
   /**
-   * Sets the scopes to their set values
-   */
-  useEffect(() => {
-    localStorage.setItem('scope', JSON.stringify(scopes));
-  }, [scopes]);
-
-  /**
    * Allows the following "useEffect" to run only on updates
    */
   const isInitialMount = useRef(true);
@@ -203,15 +190,27 @@ const App = () => {
    * Handles the scope checkbox change
    * @param {string} name
    */
-  const handleCheck = name => setScopes(scopes.includes(name) ? scopes.filter(s => s !== name) : [...scopes, name]);
+  const handleCheck = name => {
+    if (hasScope(name)) {
+      setScopes(...scopes.filter(s => s !== name));
+    } else {
+      setScopes(...scopes, name);
+    }
+  };
 
   // sets the "select all" checkbox to true if all scopes are selected
-  const allSelected = allScopes.every(s => scopes.includes(s));
+  const allSelected = allScopes.every(hasScope);
 
   /**
    * handles the "select all" checkbox change
    */
-  const handleSelectAll = () => setScopes(allSelected ? [] : allScopes);
+  const handleSelectAll = () => {
+    if (allSelected) {
+      setScopes();
+    } else {
+      setScopes(...allScopes);
+    }
+  };
 
   /**
    * Handles the submit button click, which will redirect the user to the Spotify login page
@@ -305,7 +304,7 @@ const App = () => {
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             {allScopes.map(s => (
-              <Checkbox checked={scopes.includes(s)} onClick={() => handleCheck(s)} label={s} />
+              <Checkbox checked={hasScope(s)} onClick={() => handleCheck(s)} label={s} />
             ))}
           </div>
 
