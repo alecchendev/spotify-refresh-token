@@ -31,17 +31,17 @@ const allScopes = [
 let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
 
 // if the callback uri ends with a slash, remove it
-callbackUri = callbackUri.charAt(callbackUri.length - 1) === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
+callbackUri = callbackUri.endsWith() === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
 
 // get token and scopes from url query params
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get('code');
-const urlScopes = urlParams.getAll('scope').filter(s => allScopes.includes(s));
+const urlScopes = urlParams.getAll('scope').filter((s) => allScopes.includes(s));
 
 // load and parse scopes from local storage
 const localScopes = (() => {
-  const localScopes = JSON.parse(localStorage.getItem('scope'));
-  return Array.isArray(localScopes) ? localScopes : [];
+  const x = JSON.parse(localStorage.getItem('scope'));
+  return Array.isArray(x) ? x : [];
 })();
 
 const App = () => {
@@ -53,6 +53,8 @@ const App = () => {
 
   const [saveRefreshToken, setSaveRefreshToken] = useState(false);
   const [saveClientCredentials, setSaveClientCredentials] = useState(false);
+
+  const [code, setCode] = useState('');
 
   const [outputs, setOutputs] = useState({
     filled: false,
@@ -69,10 +71,10 @@ const App = () => {
    *
    * @returns {Promise<Object>} The response from the API containing the access token
    */
-  const getAccessToken = () => axios.post(
+  const getTokens = () => axios.post(
     'https://accounts.spotify.com/api/token',
     QueryString.stringify({
-      code: refreshToken,
+      code,
       redirect_uri: callbackUri,
       grant_type: 'authorization_code',
     }),
@@ -119,20 +121,40 @@ const App = () => {
     } else if (saveRefreshToken) {
       setRefreshToken(storedToken || '');
     }
+    const c = urlParams.get('code');
+    if (c) {
+      setCode(c);
+
+      console.log(`Code: ${c}`);
+    }
+
+    const locallyStoredScope = localStorage.getItem('scope');
+    if (locallyStoredScope) {
+      setScopes(JSON.parse(locallyStoredScope));
+    }
   }, []);
+
+  useEffect(() => {
+    if (saveRefreshToken) {
+      localStorage.setItem('refreshToken', refreshToken);
+    } else {
+      localStorage.removeItem('refreshToken');
+    }
+  }, [saveRefreshToken, refreshToken]);
 
   /**
    * Gets the access token if the refresh token is set
    */
   useEffect(() => {
-    if (refreshToken.length > 0 && clientId.length > 0 && clientSecret.length > 0) {
-      getAccessToken().then((response) => {
+    if (code.length > 0 && clientId.length > 0 && clientSecret.length > 0) {
+      getTokens().then((response) => {
         setAccessToken(response.data.access_token);
+        setRefreshToken(response.data.refresh_token);
       }).catch((error) => {
         console.error(error);
       });
     }
-  }, [refreshToken]);
+  }, [code]);
 
   /**
    * Gets the data from the Spotify API if the access token is set
@@ -203,10 +225,10 @@ const App = () => {
    * Handles the scope checkbox change
    * @param {string} name
    */
-  const handleCheck = name => setScopes(scopes.includes(name) ? scopes.filter(s => s !== name) : [...scopes, name]);
+  const handleCheck = (name) => setScopes(scopes.includes(name) ? scopes.filter((s) => s !== name) : [...scopes, name]);
 
   // sets the "select all" checkbox to true if all scopes are selected
-  const allSelected = allScopes.every(s => scopes.includes(s));
+  const allSelected = allScopes.every((s) => scopes.includes(s));
 
   /**
    * handles the "select all" checkbox change
@@ -240,8 +262,15 @@ const App = () => {
           Get your spotify refresh token!
         </div>
         <div className="flex-1 bg-slate-700 rounded-xl p-5 text-base text-center no-underline">
-          If this app helps you at all, feel free to star <a href="https://github.com/alecchendev/spotify-refresh-token" target="_blank" rel="noreferrer" className="underline">the repo</a>!
-          Special thanks to <a href="https://github.com/Acorn221" target="_blank" rel="noreferrer" className="underline">James Arnott</a> for contributing to this project.
+          If this app helps you at all, feel free to star
+          {' '}
+          <a href="https://github.com/alecchendev/spotify-refresh-token" target="_blank" rel="noreferrer" className="underline">the repo</a>
+          !
+          Special thanks to
+          {' '}
+          <a href="https://github.com/Acorn221" target="_blank" rel="noreferrer" className="underline">James Arnott</a>
+          {' '}
+          for contributing to this project.
 
         </div>
         <div className="flex-1 text-xl bg-red-500 rounded-xl p-5 text-center underline">
