@@ -28,6 +28,8 @@ const allScopes = [
   'streaming',
 ];
 
+const allScopesAlias = 'all';
+
 // Get the callback uri to give to spotify
 let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
 
@@ -55,8 +57,13 @@ const App = () => {
   const token = searchParams.get('code');
   const scopes = searchParams.getAll('scope');
 
-  const setScopes = (...scopes) => setSearchParams(scopes.map(s => ['scope', s]));
+  const setScopes = (...newScopes) => setSearchParams(newScopes.map(s => ['scope', s]));
+  const setAllScopes = () => setSearchParams([['scope', allScopesAlias]]);
+
   const hasScope = scope => scopes.includes(scope);
+
+  // sets the "select all" checkbox to true if all scopes are selected
+  const allSelected = hasScope(allScopesAlias);
 
   /**
    * Gets the access token from the API
@@ -192,25 +199,26 @@ const App = () => {
    */
   const handleCheck = name => {
     if (hasScope(name)) {
-      setScopes(...scopes.filter(s => s !== name));
-    } else {
-      setScopes(...scopes, name);
+      return setScopes(...scopes.filter(s => s !== name));
     }
-  };
 
-  // sets the "select all" checkbox to true if all scopes are selected
-  const allSelected = allScopes.every(hasScope);
+    if (allSelected) {
+      return setScopes(...allScopes.filter(s => s !== name));
+    }
+
+    const selectedScopes = [...scopes, name];
+
+    if (allScopes.every(s => selectedScopes.includes(s))) {
+      return setAllScopes();
+    }
+
+    return setScopes(...selectedScopes);
+  };
 
   /**
    * handles the "select all" checkbox change
    */
-  const handleSelectAll = () => {
-    if (allSelected) {
-      setScopes();
-    } else {
-      setScopes(...allScopes);
-    }
-  };
+  const handleSelectAll = () => allSelected ? setScopes() : setAllScopes();
 
   /**
    * Handles the submit button click, which will redirect the user to the Spotify login page
@@ -304,7 +312,7 @@ const App = () => {
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             {allScopes.map(s => (
-              <Checkbox checked={hasScope(s)} onClick={() => handleCheck(s)} label={s} />
+              <Checkbox checked={hasScope(s) || allSelected} onClick={() => handleCheck(s)} label={s} />
             ))}
           </div>
 
