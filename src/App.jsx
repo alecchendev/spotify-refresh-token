@@ -57,10 +57,24 @@ const App = () => {
   const token = searchParams.get('code');
   const scopes = searchParams.getAll('scope');
 
-  const setScopes = (...newScopes) => setSearchParams(newScopes.map(s => ['scope', s]));
+  /**
+   * Set one or more scopes as URL search params in the format `scope=<name>`
+   *
+   * @param {string[]} newScopes
+   */
+  const setScopes = (...newScopes) => setSearchParams(newScopes.map((s) => ['scope', s]));
+
+  /**
+   * Set the all scopes alias URL search param
+   */
   const setAllScopes = () => setSearchParams([['scope', allScopesAlias]]);
 
-  const hasScope = scope => scopes.includes(scope);
+  /**
+   * Check if a scope is present as a URL search param
+   *
+   * @param {string} scope
+   */
+  const hasScope = (scope) => scopes.includes(scope);
 
   // sets the "select all" checkbox to true if all scopes are selected
   const allSelected = hasScope(allScopesAlias);
@@ -197,18 +211,18 @@ const App = () => {
    * Handles the scope checkbox change
    * @param {string} name
    */
-  const handleCheck = name => {
+  const handleCheck = (name) => {
     if (hasScope(name)) {
-      return setScopes(...scopes.filter(s => s !== name));
+      return setScopes(...scopes.filter((s) => s !== name));
     }
 
     if (allSelected) {
-      return setScopes(...allScopes.filter(s => s !== name));
+      return setScopes(...allScopes.filter((s) => s !== name));
     }
 
     const selectedScopes = [...scopes, name];
 
-    if (allScopes.every(s => selectedScopes.includes(s))) {
+    if (allScopes.every((s) => selectedScopes.includes(s))) {
       return setAllScopes();
     }
 
@@ -218,7 +232,7 @@ const App = () => {
   /**
    * handles the "select all" checkbox change
    */
-  const handleSelectAll = () => allSelected ? setScopes() : setAllScopes();
+  const handleSelectAll = () => (allSelected ? setScopes() : setAllScopes());
 
   /**
    * Handles the submit button click, which will redirect the user to the Spotify login page
@@ -311,7 +325,7 @@ const App = () => {
             Scope
           </div>
           <div className="grid gap-2 md:grid-cols-2">
-            {allScopes.map(s => (
+            {allScopes.map((s) => (
               <Checkbox checked={hasScope(s) || allSelected} onClick={() => handleCheck(s)} label={s} />
             ))}
           </div>
