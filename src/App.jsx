@@ -333,8 +333,8 @@ const App = () => {
             Scope
           </div>
           <div className="grid gap-2 md:grid-cols-2">
-            {allScopes.map((s) => (
-              <Checkbox checked={scopes.includes(s)} onClick={() => handleCheck(s)} label={s} />
+            {allScopes.map(s => (
+              <Checkbox checked={scopes.includes(s)} onClick={() => handleCheck(s)} label={s} key={s} />
             ))}
           </div>
 
