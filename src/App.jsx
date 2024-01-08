@@ -34,7 +34,7 @@ const allScopesAlias = 'all';
 let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
 
 // if the callback uri ends with a slash, remove it
-callbackUri = callbackUri.charAt(callbackUri.length - 1) === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
+callbackUri = callbackUri.endsWith() === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
 
 const App = () => {
   const [clientId, setClientId] = useState('');
@@ -51,10 +51,10 @@ const App = () => {
     data: {},
   });
 
-  // get token and scopes from url query params
+  // get code and scopes from url query params
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const token = searchParams.get('code');
+  const code = searchParams.get('code');
   const scopes = searchParams.getAll('scope');
 
   /**
@@ -84,10 +84,10 @@ const App = () => {
    *
    * @returns {Promise<Object>} The response from the API containing the access token
    */
-  const getAccessToken = () => axios.post(
+  const getTokens = () => axios.post(
     'https://accounts.spotify.com/api/token',
     QueryString.stringify({
-      code: refreshToken,
+      code,
       redirect_uri: callbackUri,
       grant_type: 'authorization_code',
     }),
@@ -118,21 +118,15 @@ const App = () => {
     if (clientSecretStored) {
       setClientSecret(clientSecretStored);
     }
+    const refreshTokenStored = localStorage.getItem('refreshToken');
+    if (refreshTokenStored) {
+      setRefreshToken(refreshTokenStored);
+    }
 
     // these needed to be cleared if the user does not want to save them
     if (storedSettings && !storedSettings.saveClientCredentials) {
       localStorage.removeItem('clientId');
       localStorage.removeItem('clientSecret');
-    }
-
-    const storedToken = localStorage.getItem('refreshToken');
-    if (token) {
-      setRefreshToken(token);
-      if (saveRefreshToken) {
-        localStorage.setItem('refreshToken', token);
-      }
-    } else if (saveRefreshToken) {
-      setRefreshToken(storedToken || '');
     }
   }, []);
 
@@ -140,14 +134,23 @@ const App = () => {
    * Gets the access token if the refresh token is set
    */
   useEffect(() => {
-    if (refreshToken.length > 0 && clientId.length > 0 && clientSecret.length > 0) {
-      getAccessToken().then((response) => {
+    if (code?.length > 0 && clientId.length > 0 && clientSecret.length > 0) {
+      getTokens().then((response) => {
         setAccessToken(response.data.access_token);
+        setRefreshToken(response.data.refresh_token);
       }).catch((error) => {
         console.error(error);
       });
     }
-  }, [refreshToken]);
+  }, [clientId, clientSecret]);
+
+  useEffect(() => {
+    if (saveRefreshToken) {
+      localStorage.setItem('refreshToken', refreshToken);
+    } else {
+      localStorage.removeItem('refreshToken');
+    }
+  }, [saveRefreshToken, refreshToken]);
 
   /**
    * Gets the data from the Spotify API if the access token is set
@@ -261,8 +264,15 @@ const App = () => {
           Get your spotify refresh token!
         </div>
         <div className="flex-1 bg-slate-700 rounded-xl p-5 text-base text-center no-underline">
-          If this app helps you at all, feel free to star <a href="https://github.com/alecchendev/spotify-refresh-token" target="_blank" rel="noreferrer" className="underline">the repo</a>!
-          Special thanks to <a href="https://github.com/Acorn221" target="_blank" rel="noreferrer" className="underline">James Arnott</a> for contributing to this project.
+          If this app helps you at all, feel free to star
+          {' '}
+          <a href="https://github.com/alecchendev/spotify-refresh-token" target="_blank" rel="noreferrer" className="underline">the repo</a>
+          !
+          Special thanks to
+          {' '}
+          <a href="https://github.com/Acorn221" target="_blank" rel="noreferrer" className="underline">James Arnott</a>
+          {' '}
+          for contributing to this project.
 
         </div>
         <div className="flex-1 text-xl bg-red-500 rounded-xl p-5 text-center underline">
@@ -326,7 +336,7 @@ const App = () => {
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             {allScopes.map((s) => (
-              <Checkbox checked={hasScope(s) || allSelected} onClick={() => handleCheck(s)} label={s} />
+              <Checkbox checked={hasScope(s) || allSelected} onClick={() => handleCheck(s)} label={s} key={s} />
             ))}
           </div>
 
