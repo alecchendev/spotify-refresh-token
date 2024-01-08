@@ -34,7 +34,7 @@ const allScopesAlias = 'all';
 let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
 
 // if the callback uri ends with a slash, remove it
-callbackUri = callbackUri.endsWith() === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
+callbackUri = callbackUri.endsWith('/') ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
 
 const App = () => {
   const [clientId, setClientId] = useState('');
