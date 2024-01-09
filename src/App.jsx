@@ -62,12 +62,20 @@ const App = () => {
    *
    * @param {string[]} newScopes
    */
-  const setScopes = (...newScopes) => setSearchParams(newScopes.map((s) => ['scope', s]));
-
-  /**
-   * Set the all scopes alias URL search param
-   */
-  const setAllScopes = () => setSearchParams([['scope', allScopesAlias]]);
+  const setScopes = (...newScopes) => {
+    if (newScopes.length && allScopes.every((s) => newScopes.includes(s))) {
+      setSearchParams((params) => {
+        params.set('scope', allScopesAlias);
+        return params;
+      });
+    } else {
+      setSearchParams((params) => {
+        params.delete('scope');
+        newScopes.forEach((s) => params.append('scope', s));
+        return params;
+      });
+    }
+  };
 
   /**
    * Check if a scope is present as a URL search param
@@ -121,6 +129,12 @@ const App = () => {
     const refreshTokenStored = localStorage.getItem('refreshToken');
     if (refreshTokenStored) {
       setRefreshToken(refreshTokenStored);
+    }
+
+    const sessionScopes = sessionStorage.getItem('scope');
+    if (sessionScopes) {
+      setScopes(...JSON.parse(sessionScopes));
+      sessionStorage.removeItem('scope');
     }
   }, []);
 
@@ -214,27 +228,24 @@ const App = () => {
       return setScopes(...allScopes.filter((s) => s !== name));
     }
 
-    const selectedScopes = [...scopes, name];
-
-    if (allScopes.every((s) => selectedScopes.includes(s))) {
-      return setAllScopes();
-    }
-
-    return setScopes(...selectedScopes);
+    return setScopes(...scopes, name);
   };
 
   /**
    * handles the "select all" checkbox change
    */
-  const handleSelectAll = () => (allSelected ? setScopes() : setAllScopes());
+  const handleSelectAll = () => (allSelected ? setScopes() : setScopes(...allScopes));
 
   /**
    * Handles the submit button click, which will redirect the user to the Spotify login page
    */
   const handleSubmit = () => {
+    const selectedScopes = allSelected ? allScopes : scopes;
+    sessionStorage.setItem('scope', JSON.stringify(selectedScopes));
+
     /** we include the clientId and the clientSecret in the
      *  redirect uri to avoid having to store them in the browser */
-    const scope = scopes.join(' ');
+    const scope = selectedScopes.join(' ');
     const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${callbackUri}`;
     window.location.replace(queryString);
   };
