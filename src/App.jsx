@@ -146,6 +146,10 @@ const App = () => {
       getTokens().then((response) => {
         setAccessToken(response.data.access_token);
         setRefreshToken(response.data.refresh_token);
+        setSearchParams((params) => {
+          params.delete('code');
+          return searchParams;
+        });
       }).catch((error) => {
         console.error(error);
       });
