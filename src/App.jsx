@@ -118,11 +118,11 @@ const App = () => {
       setSaveClientCredentials(storedSettings.saveClientCredentials);
     }
 
-    const clientIdStored = localStorage.getItem('clientId');
+    const clientIdStored = localStorage.getItem('clientId') || sessionStorage.getItem('clientId');
     if (clientIdStored) {
       setClientId(clientIdStored);
     }
-    const clientSecretStored = localStorage.getItem('clientSecret');
+    const clientSecretStored = localStorage.getItem('clientSecret') || sessionStorage.getItem('clientSecret');
     if (clientSecretStored) {
       setClientSecret(clientSecretStored);
     }
@@ -134,8 +134,9 @@ const App = () => {
     const sessionScopes = sessionStorage.getItem('scope');
     if (sessionScopes) {
       setScopes(...JSON.parse(sessionScopes));
-      sessionStorage.removeItem('scope');
     }
+
+    sessionStorage.clear();
   }, []);
 
   /**
@@ -244,6 +245,9 @@ const App = () => {
    * Handles the submit button click, which will redirect the user to the Spotify login page
    */
   const handleSubmit = () => {
+    sessionStorage.setItem('clientId', clientId);
+    sessionStorage.setItem('clientSecret', clientSecret);
+
     const selectedScopes = allSelected ? allScopes : scopes;
     sessionStorage.setItem('scope', JSON.stringify(selectedScopes));
 
