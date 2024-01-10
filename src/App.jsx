@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import QueryString from 'query-string';
 import axios from 'axios';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { useSearchParams } from 'react-router-dom';
 import Checkbox from './components/Checkbox';
 import InputBox from './components/InputBox';
 
@@ -27,22 +28,13 @@ const allScopes = [
   'streaming',
 ];
 
+const allScopesAlias = 'all';
+
 // Get the callback uri to give to spotify
 let callbackUri = window.location.href.split('/').slice(0, 4).join('/');
 
 // if the callback uri ends with a slash, remove it
-callbackUri = callbackUri.endsWith() === '/' ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
-
-// get token and scopes from url query params
-const urlParams = new URLSearchParams(window.location.search);
-const token = urlParams.get('code');
-const urlScopes = urlParams.getAll('scope').filter((s) => allScopes.includes(s));
-
-// load and parse scopes from local storage
-const localScopes = (() => {
-  const x = JSON.parse(localStorage.getItem('scope'));
-  return Array.isArray(x) ? x : [];
-})();
+callbackUri = callbackUri.endsWith('/') ? callbackUri.slice(0, callbackUri.length - 1) : callbackUri;
 
 const App = () => {
   const [clientId, setClientId] = useState('');
@@ -54,17 +46,46 @@ const App = () => {
   const [saveRefreshToken, setSaveRefreshToken] = useState(false);
   const [saveClientCredentials, setSaveClientCredentials] = useState(false);
 
-  const [code, setCode] = useState('');
-
   const [outputs, setOutputs] = useState({
     filled: false,
     data: {},
   });
 
-  const [scopes, setScopes] = useState([
-    ...localScopes,
-    ...urlScopes,
-  ]);
+  // get code and scopes from url query params
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const code = searchParams.get('code');
+  const scopes = searchParams.getAll('scope');
+
+  /**
+   * Set one or more scopes as URL search params in the format `scope=<name>`
+   *
+   * @param {string[]} newScopes
+   */
+  const setScopes = (...newScopes) => {
+    if (newScopes.length && allScopes.every((s) => newScopes.includes(s))) {
+      setSearchParams((params) => {
+        params.set('scope', allScopesAlias);
+        return params;
+      });
+    } else {
+      setSearchParams((params) => {
+        params.delete('scope');
+        newScopes.forEach((s) => params.append('scope', s));
+        return params;
+      });
+    }
+  };
+
+  /**
+   * Check if a scope is present as a URL search param
+   *
+   * @param {string} scope
+   */
+  const hasScope = (scope) => scopes.includes(scope);
+
+  // sets the "select all" checkbox to true if all scopes are selected
+  const allSelected = hasScope(allScopesAlias);
 
   /**
    * Gets the access token from the API
@@ -97,64 +118,44 @@ const App = () => {
       setSaveClientCredentials(storedSettings.saveClientCredentials);
     }
 
-    const clientIdStored = localStorage.getItem('clientId');
+    const clientIdStored = localStorage.getItem('clientId') || sessionStorage.getItem('clientId');
     if (clientIdStored) {
       setClientId(clientIdStored);
     }
-    const clientSecretStored = localStorage.getItem('clientSecret');
+    const clientSecretStored = localStorage.getItem('clientSecret') || sessionStorage.getItem('clientSecret');
     if (clientSecretStored) {
       setClientSecret(clientSecretStored);
     }
-
-    // these needed to be cleared if the user does not want to save them
-    if (storedSettings && !storedSettings.saveClientCredentials) {
-      localStorage.removeItem('clientId');
-      localStorage.removeItem('clientSecret');
+    const refreshTokenStored = localStorage.getItem('refreshToken');
+    if (refreshTokenStored) {
+      setRefreshToken(refreshTokenStored);
     }
 
-    const storedToken = localStorage.getItem('refreshToken');
-    if (token) {
-      setRefreshToken(token);
-      if (saveRefreshToken) {
-        localStorage.setItem('refreshToken', token);
-      }
-    } else if (saveRefreshToken) {
-      setRefreshToken(storedToken || '');
-    }
-    const c = urlParams.get('code');
-    if (c) {
-      setCode(c);
-
-      console.log(`Code: ${c}`);
+    const sessionScopes = sessionStorage.getItem('scope');
+    if (sessionScopes) {
+      setScopes(...JSON.parse(sessionScopes));
     }
 
-    const locallyStoredScope = localStorage.getItem('scope');
-    if (locallyStoredScope) {
-      setScopes(JSON.parse(locallyStoredScope));
-    }
+    sessionStorage.clear();
   }, []);
-
-  useEffect(() => {
-    if (saveRefreshToken) {
-      localStorage.setItem('refreshToken', refreshToken);
-    } else {
-      localStorage.removeItem('refreshToken');
-    }
-  }, [saveRefreshToken, refreshToken]);
 
   /**
    * Gets the access token if the refresh token is set
    */
   useEffect(() => {
-    if (code.length > 0 && clientId.length > 0 && clientSecret.length > 0) {
+    if (code?.length > 0 && clientId.length > 0 && clientSecret.length > 0) {
       getTokens().then((response) => {
         setAccessToken(response.data.access_token);
         setRefreshToken(response.data.refresh_token);
+        setSearchParams((params) => {
+          params.delete('code');
+          return searchParams;
+        });
       }).catch((error) => {
         console.error(error);
       });
     }
-  }, [code]);
+  }, [clientId, clientSecret]);
 
   /**
    * Gets the data from the Spotify API if the access token is set
@@ -180,13 +181,6 @@ const App = () => {
   }, [accessToken]);
 
   /**
-   * Sets the scopes to their set values
-   */
-  useEffect(() => {
-    localStorage.setItem('scope', JSON.stringify(scopes));
-  }, [scopes]);
-
-  /**
    * Allows the following "useEffect" to run only on updates
    */
   const isInitialMount = useRef(true);
@@ -203,54 +197,63 @@ const App = () => {
   }, [saveRefreshToken, saveClientCredentials]);
 
   /**
-   * Removes the refresh token from local storage if the user doesn't want to save it
+   * Add or remove the refresh token from local storage
    */
   useEffect(() => {
-    if (!saveRefreshToken) {
+    if (saveRefreshToken) {
+      localStorage.setItem('refreshToken', refreshToken);
+    } else {
       localStorage.removeItem('refreshToken');
     }
-  }, [saveRefreshToken]);
+  }, [saveRefreshToken, refreshToken]);
 
   /**
-   * Removes the client credentials from local storage if the user doesn't want to save them
+   * Add or remove client credentials from local storage
    */
   useEffect(() => {
-    if (!saveClientCredentials) {
+    if (saveClientCredentials) {
+      localStorage.setItem('clientId', clientId);
+      localStorage.setItem('clientSecret', clientSecret);
+    } else {
       localStorage.removeItem('clientId');
       localStorage.removeItem('clientSecret');
     }
-  }, [saveClientCredentials]);
+  }, [saveClientCredentials, clientId, clientSecret]);
 
   /**
    * Handles the scope checkbox change
    * @param {string} name
    */
-  const handleCheck = (name) => setScopes(scopes.includes(name) ? scopes.filter((s) => s !== name) : [...scopes, name]);
+  const handleCheck = (name) => {
+    if (hasScope(name)) {
+      return setScopes(...scopes.filter((s) => s !== name));
+    }
 
-  // sets the "select all" checkbox to true if all scopes are selected
-  const allSelected = allScopes.every((s) => scopes.includes(s));
+    if (allSelected) {
+      return setScopes(...allScopes.filter((s) => s !== name));
+    }
+
+    return setScopes(...scopes, name);
+  };
 
   /**
    * handles the "select all" checkbox change
    */
-  const handleSelectAll = () => setScopes(allSelected ? [] : allScopes);
+  const handleSelectAll = () => (allSelected ? setScopes() : setScopes(...allScopes));
 
   /**
    * Handles the submit button click, which will redirect the user to the Spotify login page
    */
   const handleSubmit = () => {
-    /**
-     * Save the client credentials to local storage,
-     * if the user has decided not to save them, on the next page load they will be cleared
-     * This can be a security risk if the user never comes back to the page, with some error
-     * however, this should not be used for anything other than testing and development
-     */
-    localStorage.setItem('clientId', clientId);
-    localStorage.setItem('clientSecret', clientSecret);
+    sessionStorage.setItem('clientId', clientId);
+    sessionStorage.setItem('clientSecret', clientSecret);
+
+    const selectedScopes = allSelected ? allScopes : scopes;
+    sessionStorage.setItem('scope', JSON.stringify(selectedScopes));
 
     /** we include the clientId and the clientSecret in the
      *  redirect uri to avoid having to store them in the browser */
-    const scope = scopes.join(' ');
+    const scope = selectedScopes.join(' ');
     const queryString = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${callbackUri}`;
     window.location.replace(queryString);
   };
@@ -333,8 +336,8 @@ const App = () => {
             Scope
           </div>
           <div className="grid gap-2 md:grid-cols-2">
-            {allScopes.map(s => (
-              <Checkbox checked={scopes.includes(s)} onClick={() => handleCheck(s)} label={s} key={s} />
+            {allScopes.map((s) => (
+              <Checkbox checked={hasScope(s) || allSelected} onClick={() => handleCheck(s)} label={s} key={s} />
             ))}
           </div>
 
