@@ -25,4 +25,4 @@ change the homepage to your github pages url in package.json
 
 change the 'base' in vite.config.js to your github repo name
 
-	yarn run deploy
+	yarn run gh-pages-deploy
